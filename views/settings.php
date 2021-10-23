@@ -110,7 +110,7 @@ function amazon_seller_dashboard_settings_details()
 					<?php if (current_user_can('administrator')) : ?>
 						<div class="form-group">
 							<label for="client">Client</label>
-							<select class="form-control" name="client">
+							<select class="form-control hybrid-select" name="client">
 								<option value="">Choose Client</option>
 								<?php
 								foreach ($users as $user) {
