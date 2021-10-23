@@ -1,7 +1,12 @@
 jQuery(document).ready(function($) {
+
+	$(".hybrid-select").select2({
+		placeholder: "Select Keyword",
+	});
+
     $("#ProductSurveyForm").validate({
 			rules: {
-				product: {
+				keyword: {
 					required: true,
 					maxlength: 255
 				},

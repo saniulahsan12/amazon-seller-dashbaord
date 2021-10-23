@@ -13,16 +13,23 @@ add_action('init', 'save_seller_survey_data_to_db');
 function save_seller_survey_data_to_db()
 {
     if (isset($_POST['submit_admin_product_survey'])) {
-        // dump out the POST data
-        var_dump($_POST);
 
         if (!empty($_POST['name']) && !empty($_POST['order_number']) && !empty($_POST['amount']) && !empty($_POST['email']) && !empty($_POST['phone'])) {
             if (filter_var($_POST['email'], FILTER_VALIDATE_EMAIL) && ($_POST['email'] === $_POST['confirm_email'])) {
 
                 global $wpdb;
                 $table = $wpdb->prefix . 'amazon_seller_products';
+                $term_meta = $wpdb->prefix . 'termmeta';
+
+                $term_id = clean_input($_POST['keyword']);
+                $sql = "SELECT meta_value FROM ${term_meta}  
+				WHERE meta_key='user_id' AND term_id=${term_id}";
+
+                $client = $wpdb->get_results($sql, ARRAY_A);
+
                 $data = [
-                    'product_id' => clean_input($_POST['product']),
+                    'client_id' => !empty($client) ? $client[0]['meta_value'] : -1,
+                    'keyword_id' => clean_input($_POST['keyword']),
                     'name' => clean_input($_POST['name']),
                     'order_number' => clean_input($_POST['order_number']),
                     'amount' => clean_input($_POST['amount']),
@@ -30,6 +37,7 @@ function save_seller_survey_data_to_db()
                     'phone' => clean_input($_POST['phone']),
                 ];
                 $format = [
+                    '%d',
                     '%d',
                     '%s',
                     '%s',
@@ -55,15 +63,15 @@ add_shortcode('amazon-seller-survey-form', 'amazon_survey_seller_form');
 function amazon_survey_seller_form()
 {
     $status = !empty($_GET['status']) ? $_GET['status'] : '';
-    $args = array(
-        'post_type' => 'amazon_seller_prod',
-        'post_status' => 'publish',
-        'posts_per_page' => -1,
-        'showposts' => -1,
-        'orderby' => 'title',
-        'order' => 'ASC'
-    );
-    $loop = new WP_Query($args);
+
+    global $wpdb;
+    $term_taxonomy = $wpdb->prefix . 'term_taxonomy';
+    $terms = $wpdb->prefix . 'terms';
+    $sql = "SELECT ${terms}.term_id, ${terms}.name FROM ${term_taxonomy} 
+				INNER JOIN ${terms} ON ${term_taxonomy}.term_id=${terms}.term_id 
+				AND ${term_taxonomy}.taxonomy='keywords'";
+
+    $keywords = $wpdb->get_results($sql, ARRAY_A);
 ?>
     <div class="amazon-seller-dashboard-admin">
 
@@ -71,25 +79,24 @@ function amazon_survey_seller_form()
             <div class="alert alert-success" role="alert">
                 Thanks. Your information was saved successfully.
             </div>
-        <?php exit; endif; ?>
+        <?php exit;
+        endif; ?>
 
         <?php if ($status == 'error') : ?>
             <div class="alert alert-danger" role="alert">
                 Sorry. Your information was not saved. Please try again.
             </div>
-        <?php exit; endif; ?>
+        <?php exit;
+        endif; ?>
 
         <form method="post" id="ProductSurveyForm">
             <div class="form-group">
-                <label for="product">Choose the product <span class="required">*</span></label>
-                <select class="form-control" id="product" name="product">
+                <label for="keyword">Choose the keyword <span class="required">*</span></label>
+                <select class="form-control hybrid-select" id="keyword" name="keyword">
                     <option value="">Choose</option>
-                    <?php while ($loop->have_posts()) : $loop->the_post(); ?>
-                        <option value="<?php echo get_the_ID(); ?>"> <?php echo get_the_title(); ?> </option>
-                    <?php
-                    endwhile;
-                    wp_reset_postdata();
-                    ?>
+                    <?php foreach ($keywords as $keyword) : ?>
+                        <option value="<?php echo $keyword['term_id']; ?>"> <?php echo $keyword['name']; ?> </option>
+                    <?php endforeach; ?>
                 </select>
                 <div class="validation-box"></div>
             </div>

@@ -3,9 +3,11 @@
 function amaz0n_seller_dashboard_scripts()
 {
 	wp_enqueue_style('amazon-seller-bootstrap-styles', BpaxAddFile::addFiles('assets/css', 'bootstrap.min', 'css', true));
+	wp_enqueue_style('amazon-seller-select2-styles', BpaxAddFile::addFiles('assets/css', 'select2.min', 'css', true));
 	wp_enqueue_style('amazon-seller-styles', BpaxAddFile::addFiles('assets/css', 'plugin', 'css', true));
 	wp_enqueue_script('jquery-validation-scripts', BpaxAddFile::addFiles('assets/js', 'plugin', 'js', true), array('jquery'), '1.0.0', true);
 	wp_enqueue_script('amazon-seller-scripts', BpaxAddFile::addFiles('assets/js', 'jquery.validate.min', 'js', true), array('jquery'), '1.0.0', true);
+	wp_enqueue_script('amazon-seller-select2-scripts', BpaxAddFile::addFiles('assets/js', 'select2.min', 'js', true), array('jquery'), '1.0.0', true);
 }
 add_action('wp_enqueue_scripts', 'amaz0n_seller_dashboard_scripts');
 add_action('admin_enqueue_scripts', 'amaz0n_seller_dashboard_scripts');

@@ -30,7 +30,8 @@ function amazon_seller_trigger_activating_plugin() {
 	if ( $wpdb->get_var( "show tables like '$table_name'" ) != $table_name ) {
 		$sql = 'CREATE TABLE ' . $table_name . ' (
 				`id` bigint NOT NULL AUTO_INCREMENT PRIMARY KEY,
-				`product_id` bigint NOT NULL,
+				`keyword_id` bigint NOT NULL,
+				`client_id` bigint NOT NULL,
 				`name` varchar(255) NOT NULL,
 				`order_number` varchar(255) NOT NULL,
 				`amount` double NOT NULL,
@@ -42,7 +43,7 @@ function amazon_seller_trigger_activating_plugin() {
 				';
 		dbDelta( $sql );
 
-		$sql = 'CREATE  INDEX idx_product_id ON '. $wpdb->prefix .'amazon_seller_products(product_id);';
+		$sql = 'CREATE  INDEX idx_keyword_id ON '. $wpdb->prefix . 'amazon_seller_products(keyword_id);';
 		$wpdb->query($sql);
 
 		$sql = 'CREATE  INDEX idx_order_number ON ' . $wpdb->prefix . 'amazon_seller_products(order_number);';
@@ -55,6 +56,9 @@ function amazon_seller_trigger_activating_plugin() {
 		$wpdb->query($sql);
 
 		$sql = 'CREATE  INDEX idx_name ON ' . $wpdb->prefix . 'amazon_seller_products(name);';
+		$wpdb->query($sql);
+
+		$sql = 'CREATE  INDEX idx_client_id ON ' . $wpdb->prefix . 'amazon_seller_products(client_id);';
 		$wpdb->query($sql);
 	}
 

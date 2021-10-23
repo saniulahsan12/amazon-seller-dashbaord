@@ -10,6 +10,7 @@ function amazon_seller_dashboard_settings_details()
 	$table_name = $wpdb->prefix . 'amazon_seller_products';
 	$post_table_name = $wpdb->prefix . 'posts';
 	$term_relationships = $wpdb->prefix . 'term_relationships';
+	$term_taxonomy = $wpdb->prefix . 'term_taxonomy';
 	$terms = $wpdb->prefix . 'terms';
 	$page = clean_input($_GET['page_no'] ?? 1);
 	$limit = clean_input($_GET['limit'] ?? 10);
@@ -27,9 +28,9 @@ function amazon_seller_dashboard_settings_details()
 
 
 	if (!current_user_can('administrator')) {
-		$where_post_author = "WHERE ${post_table_name}.post_author=" . get_current_user_id();
+		$where_post_author = "WHERE ${table_name}.client_id=" . get_current_user_id();
 	} else {
-		$where_post_author = "WHERE ${post_table_name}.post_author=" . clean_input($client);
+		$where_post_author = "WHERE ${table_name}.client_id=" . clean_input($client);
 	}
 
 	if (!empty($_GET['order_number'])) {
@@ -52,17 +53,15 @@ function amazon_seller_dashboard_settings_details()
 		$search_params .= "AND ${table_name}.name LIKE '%${name}%'";
 	}
 
-	if (!empty($_GET['product_id'])) {
-		$product_id = clean_input($_GET['product_id']);
-		$search_params .= "AND ${table_name}.product_id=${product_id}";
+	if (!empty($_GET['keyword_id'])) {
+		$keyword_id = clean_input($_GET['keyword_id']);
+		$search_params .= "AND ${table_name}.keyword_id=${keyword_id}";
 	}
 
-	$sql = "SELECT count(*) AS total FROM ${table_name} 
-			INNER JOIN ${post_table_name} ON ${table_name}.product_id=${post_table_name}.ID 
-			${where_post_author} 
-			AND ${post_table_name}.post_status='publish' 
-			AND ${post_table_name}.post_type='amazon_seller_prod' 
-			${search_params} 
+	$sql = "SELECT ${terms}.name AS keyword, ${table_name}.name AS name, order_number, amount, email, phone, keyword_id FROM ${table_name} 
+				INNER JOIN ${terms} ON ${table_name}.keyword_id=${terms}.term_id 
+				${where_post_author} 
+				${search_params} 
 			";
 
 	$total = $wpdb->get_results($sql, ARRAY_A);
@@ -70,44 +69,19 @@ function amazon_seller_dashboard_settings_details()
 		$total = $total[0]['total'];
 	}
 
-	$sql = "SELECT post_author, post_title, name, order_number, amount, email, phone, product_id FROM ${table_name} 
-				INNER JOIN ${post_table_name} ON ${table_name}.product_id=${post_table_name}.ID 
+	$sql = "SELECT ${terms}.name AS keyword, ${table_name}.name AS name, order_number, amount, email, phone, keyword_id FROM ${table_name} 
+				INNER JOIN ${terms} ON ${table_name}.keyword_id=${terms}.term_id 
 				${where_post_author} 
-				AND ${post_table_name}.post_status='publish' 
-				AND ${post_table_name}.post_type='amazon_seller_prod' 
 				${search_params} 
 				LIMIT ${limit} OFFSET ${offset}";
 
 	$products = $wpdb->get_results($sql, ARRAY_A);
-	if (!empty($products)) {
-		foreach ($products as $key => $product) {
-			$product_id = $product['product_id'];
-			$sql = "SELECT term_id, name, slug FROM ${term_relationships} 
-			INNER JOIN ${terms} ON  ${terms}.term_id=${term_relationships}.term_taxonomy_id
-			WHERE ${term_relationships}.object_id=${product_id}";
 
-			$keywords = $wpdb->get_results($sql, ARRAY_A);
-			$keywords_map = array_map(function ($keyword) {
-				return $keyword['name'];
-			}, $keywords);
-			$product['keywords'] = $keywords_map;
-			$products[$key] = $product;
-		}
-	}
+	$sql = "SELECT ${terms}.term_id, ${terms}.name FROM ${term_taxonomy} 
+				INNER JOIN ${terms} ON ${term_taxonomy}.term_id=${terms}.term_id 
+				AND ${term_taxonomy}.taxonomy='keywords'";
 
-	$args = [
-		'orderby'       =>  'post_title',
-		'order'         =>  'ASC',
-		'posts_per_page' => -1,
-		'post_status' => 'publish',
-		'post_type' => 'amazon_seller_prod'
-	];
-
-	if (!current_user_can('administrator')) {
-		$args['author'] = get_current_user_id();
-	}
-
-	$prod_query = new WP_Query($args);
+	$keywords = $wpdb->get_results($sql, ARRAY_A);
 ?>
 	<div class="amazon-seller-dashboard-admin">
 		<form class="col-md-12" style="margin-top: 2%" method="get">
@@ -149,15 +123,14 @@ function amazon_seller_dashboard_settings_details()
 					<?php endif; ?>
 
 					<div class="form-group">
-						<label for="limit">Products</label>
-						<select class="form-control" name="product_id">
+						<label for="limit">Keywords</label>
+						<select class="form-control hybrid-select" name="keyword_id">
 							<option value="">Select</option>
 							<?php
-							if ($prod_query->have_posts()) {
-								while ($prod_query->have_posts()) {
-									$prod_query->the_post();
-									$selected = clean_input($_GET['product_id']) == get_the_ID() ? 'selected' : '';
-									echo '<option ' . $selected . ' value="' . get_the_ID() . '">' . get_the_title() . '</option>';
+							if (!empty($keywords)) {
+								foreach ($keywords as $keyword) {
+									$selected = clean_input($_GET['keyword_id']) == $keyword['term_id'] ? 'selected' : '';
+									echo '<option ' . $selected . ' value="' . $keyword['term_id'] . '">' . $keyword['name'] . '</option>';
 								}
 							}
 							?>
@@ -212,7 +185,6 @@ function amazon_seller_dashboard_settings_details()
 
 									<th scope="col">Order Id.</th>
 									<th scope="col" class="text-right">Amount</th>
-									<th scope="col">Product</th>
 									<th scope="col">Keywords</th>
 								</tr>
 							</thead>
@@ -230,8 +202,7 @@ function amazon_seller_dashboard_settings_details()
 
 										<td><?php echo $product['order_number']; ?></td>
 										<td class="text-right"><?php echo $product['amount']; ?></td>
-										<td><?php echo $product['post_title']; ?></td>
-										<td><?php echo !empty($product['keywords']) ? implode($product['keywords'], ', ') : 'N/A'; ?></td>
+										<td><?php echo $product['keyword']; ?></td>
 								</tbody>
 							<?php endforeach; ?>
 						</table>
