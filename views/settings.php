@@ -239,7 +239,7 @@ function amazon_seller_dashboard_settings_details()
 
 					<?php if (empty($products)) : ?>
 						<div class="alert alert-danger">
-							No Products found.
+							No Results found.
 						</div>
 					<?php endif; ?>
 

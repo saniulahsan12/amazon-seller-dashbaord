@@ -86,6 +86,6 @@ BpaxAddFile::addFiles('views', 'settings', 'php');
 add_action('admin_menu', 'amazon_seller_dashboard_settings');
 function amazon_seller_dashboard_settings()
 {
-	add_menu_page('Seller Dashboard', 'Seller Dashboard', 'read', 'amazon-seller-dashboard-api-settings', 'amazon_seller_dashboard_settings_details', BpaxAddFile::addFiles('assets/images', 'icon-small', 'png', true), 100);
+	add_menu_page('Seller Dashboard', 'Seller Dashboard', 'read', 'amazon-seller-dashboard-api-settings', 'amazon_seller_dashboard_settings_details', BpaxAddFile::addFiles('assets/images', 'icon-small', 'png', true), 99);
 	add_submenu_page('amazon-seller-dashboard-api-settings', 'Keywords', 'Keywords', 'manage_options', 'amazon-seller-dashboard-keywords', 'amazon_seller_dashboard_keywords');
 }
