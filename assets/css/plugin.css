@@ -1,12 +1,19 @@
- .amazon-seller-dashboard-admin span.required,
+ .amazon-seller-dashboard-admin {
+    background: #fff;
+    padding: 10px;
+    margin-top: 10px;
+    margin-right: 10px;
+ }
+
+.amazon-seller-dashboard-admin span.required,
  .amazon-seller-dashboard-admin label.form-validation-error {
      color: red !important;
  }
 
- .update-nag,
- .updated,
- .error,
- .is-dismissible {
+ .amazon-seller-dashboard-admin .update-nag,
+ .amazon-seller-dashboard-admin .updated,
+ .amazon-seller-dashboard-admin .error,
+ .amazon-seller-dashboard-admin .is-dismissible {
      display: none !important;
  }
 

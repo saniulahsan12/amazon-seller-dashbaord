@@ -82,7 +82,6 @@ BpaxAddFile::addFiles( '/', 'helpers', 'php' );
 BpaxAddFile::addFiles( '/', 'shortcode', 'php' );
 
 BpaxAddFile::addFiles('views', 'settings', 'php');
-BpaxAddFile::addFiles('views', 'logs', 'php');
 
 add_action('admin_menu', 'amazon_seller_dashboard_settings');
 function amazon_seller_dashboard_settings()

@@ -108,7 +108,6 @@ function amazon_seller_dashboard_settings_details()
 	}
 
 	$prod_query = new WP_Query($args);
-	print_r($my_products);
 ?>
 	<div class="amazon-seller-dashboard-admin">
 		<form class="col-md-12" style="margin-top: 2%" method="get">
@@ -133,6 +132,21 @@ function amazon_seller_dashboard_settings_details()
 							<option <?php echo $limit == 1000 ? 'selected' : ''; ?> value="1000">1000</option>
 						</select>
 					</div>
+
+					<?php if (current_user_can('administrator')) : ?>
+						<div class="form-group">
+							<label for="client">Client</label>
+							<select class="form-control" name="client">
+								<option value="">Choose Client</option>
+								<?php
+								foreach ($users as $user) {
+									$selected = $client == $user->ID ? 'selected' : '';
+									echo '<option ' . $selected . ' value="' . $user->ID . '">' . esc_html($user->display_name) . ' [' . esc_html($user->user_email) . ']</option>';
+								}
+								?>
+							</select>
+						</div>
+					<?php endif; ?>
 
 					<div class="form-group">
 						<label for="limit">Products</label>
@@ -171,21 +185,6 @@ function amazon_seller_dashboard_settings_details()
 						<label for="order_number">Name</label>
 						<input type="text" class="form-control" name="name" value="<?php echo clean_input($_GET['name']) ?? ''; ?>">
 					</div>
-
-					<?php if (current_user_can('administrator')) : ?>
-						<div class="form-group">
-							<label for="client">Client</label>
-							<select class="form-control" name="client">
-								<option value="">Choose Client</option>
-								<?php
-								foreach ($users as $user) {
-									$selected = $client == $user->ID ? 'selected' : '';
-									echo '<option ' . $selected . ' value="' . $user->ID . '">' . esc_html($user->display_name) . ' [' . esc_html($user->user_email) . ']</option>';
-								}
-								?>
-							</select>
-						</div>
-					<?php endif; ?>
 
 					<div class="form-group">
 						<p>
