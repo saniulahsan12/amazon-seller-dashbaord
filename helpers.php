@@ -68,10 +68,10 @@ add_action('init', function () {
 	$args = [
 		'capability_type'     => array('amazon_seller_prod', 'amazon_seller_prods'),
 		'map_meta_cap'        => true,
-		'label' => __('Amazon Seller Products', 'txtdomain'),
+		'label' => __('Seller Products', 'txtdomain'),
 		'public' => true,
 		'show_in_quick_edit' => false,
-		'menu_position' => 999,
+		'menu_position' => 99,
 		'menu_icon' => BpaxAddFile::addFiles('assets/images', 'icon-small', 'png', true),
 		'supports' => ['title'],
 		'show_in_rest' => false,
