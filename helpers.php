@@ -80,6 +80,7 @@ add_action('init', function () {
 			'singular_name' => __('Seller Product', 'txtdomain'),
 			'add_new_item' => __('Seller Product', 'txtdomain'),
 			'new_item' => __('New Seller Product', 'txtdomain'),
+			'edit_item' => __('Edit Seller Product'),
 			'view_item' => __('View Seller Product', 'txtdomain'),
 			'not_found' => __('No Seller Products Found', 'txtdomain'),
 			'not_found_in_trash' => __('No Seller Products found in trash', 'txtdomain'),
