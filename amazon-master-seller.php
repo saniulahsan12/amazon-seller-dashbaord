@@ -37,8 +37,7 @@ function amazon_seller_trigger_activating_plugin() {
 				`amount` double NOT NULL,
 				`email` varchar(255) NOT NULL,
 				`phone` varchar(255) NOT NULL,
-				`created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-				`updated` datetime DEFAULT NULL
+				`created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 				) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;
 				';
 		dbDelta( $sql );

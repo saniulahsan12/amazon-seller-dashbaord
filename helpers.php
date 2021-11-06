@@ -70,7 +70,7 @@ add_action('init', function () {
 	$args = [
 		'capability_type'     => array('amazon_seller_prod', 'amazon_seller_prods'),
 		'map_meta_cap'        => true,
-		'label' => __('Seller Products', 'txtdomain'),
+		'label' => __('Seller Jobs', 'txtdomain'),
 		'public' => true,
 		'show_in_quick_edit' => false,
 		'menu_position' => 99,
@@ -79,15 +79,15 @@ add_action('init', function () {
 		'show_in_rest' => false,
 		'rewrite' => ['slug' => 'amazon-seller-products'],
 		'labels' => [
-			'singular_name' => __('Seller Product', 'txtdomain'),
-			'add_new_item' => __('Seller Product', 'txtdomain'),
-			'new_item' => __('New Seller Product', 'txtdomain'),
-			'edit_item' => __('Edit Seller Product'),
-			'view_item' => __('View Seller Product', 'txtdomain'),
-			'not_found' => __('No Seller Products Found', 'txtdomain'),
-			'not_found_in_trash' => __('No Seller Products found in trash', 'txtdomain'),
-			'all_items' => __('All Seller Products', 'txtdomain'),
-			'insert_into_item' => __('Insert into Seller Product', 'txtdomain')
+			'singular_name' => __('Seller Job', 'txtdomain'),
+			'add_new_item' => __('Add New Job Id', 'txtdomain'),
+			'new_item' => __('New Job Id', 'txtdomain'),
+			'edit_item' => __('Edit Job Id'),
+			'view_item' => __('View Job Id', 'txtdomain'),
+			'not_found' => __('No Job Ids Found', 'txtdomain'),
+			'not_found_in_trash' => __('No Job Ids found in trash', 'txtdomain'),
+			'all_items' => __('All Job Ids', 'txtdomain'),
+			'insert_into_item' => __('Insert into Job Id', 'txtdomain')
 		],
 	];
 
@@ -177,6 +177,68 @@ function amazon_seller_add_role_caps()
 		}
 	}
 }
+
+function asin_number_meta_box()
+{
+
+	add_meta_box(
+		'asin-number',
+		__('ASIN Number', 'sitepoint'),
+		'asin_number_meta_box_callback',
+		'amazon_seller_prod'
+	);
+}
+
+function asin_number_meta_box_callback($post)
+{
+
+	// Add a nonce field so we can check for it later.
+	wp_nonce_field('asin_number_nonce', 'asin_number_nonce');
+
+	$value = get_post_meta($post->ID, 'asin_number', true);
+
+	echo '<input type="text" style="width:100%" id="asin_number" name="asin_number" value="' . esc_attr($value) . '">';
+}
+
+/**
+ * When the post is saved, saves our custom data.
+ *
+ * @param int $post_id
+ */
+function save_asin_number_meta_box_data($post_id)
+{
+
+	// Check if our nonce is set.
+	if (!isset($_POST['asin_number_nonce'])) {
+		return;
+	}
+
+	// Verify that the nonce is valid.
+	if (!wp_verify_nonce($_POST['asin_number_nonce'], 'asin_number_nonce')) {
+		return;
+	}
+
+	// If this is an autosave, our form has not been submitted, so we don't want to do anything.
+	if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+		return;
+	}
+	/* OK, it's safe for us to save the data now. */
+
+	// Make sure that it is set.
+	if (!isset($_POST['asin_number'])) {
+		return;
+	}
+
+	// Sanitize user input.
+	$my_data = sanitize_text_field($_POST['asin_number']);
+
+	// Update the meta field in the database.
+	update_post_meta($post_id, 'asin_number', $my_data);
+}
+
+add_action('save_post', 'save_asin_number_meta_box_data');
+
+add_action('add_meta_boxes', 'asin_number_meta_box');
 
 function posts_for_current_author($query)
 {

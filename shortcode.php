@@ -46,7 +46,7 @@ function save_seller_survey_data_to_db()
                     '%s',
                 ];
                 $wpdb->insert($table, $data, $format);
-                print_r($wpdb->insert_id);
+
                 if (!empty($wpdb->insert_id)) {
                     wp_redirect($_POST['redirect_url'] . '?status=success');
                     exit;

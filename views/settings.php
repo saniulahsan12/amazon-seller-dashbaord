@@ -28,8 +28,10 @@ function amazon_seller_dashboard_settings_details()
 
 
 	if (!current_user_can('administrator')) {
+		$where_job_author = "WHERE ${post_table_name}.post_author=" . get_current_user_id();
 		$where_post_author = "WHERE ${table_name}.client_id=" . get_current_user_id();
 	} else {
+		$where_job_author = "WHERE ${post_table_name}.post_author>0";
 		$where_post_author = "WHERE ${table_name}.client_id=" . clean_input($client);
 	}
 
@@ -53,9 +55,28 @@ function amazon_seller_dashboard_settings_details()
 		$search_params .= "AND ${table_name}.name LIKE '%${name}%'";
 	}
 
-	if (!empty($_GET['keyword_id'])) {
-		$keyword_id = clean_input($_GET['keyword_id']);
-		$search_params .= "AND ${table_name}.keyword_id=${keyword_id}";
+	if (!empty($_GET['job_id']) || !empty($_GET['keyword_id'])) {
+
+		if (!empty($_GET['job_id'])) {
+
+			$job_id = clean_input($_GET['job_id']);
+			$keywords = get_the_terms($job_id, 'keywords');
+	
+			if (!empty($keywords)) {
+				$keywords_map = array_map(function($keyword) {
+					return $keyword->term_id;
+				}, $keywords);
+				$keywords_map = implode($keywords_map, ',');
+			} else {
+				$keywords_map = NULL;
+			}
+			$search_params .= "AND ${table_name}.keyword_id IN (${keywords_map}) ";
+
+		} else if (!empty($_GET['keyword_id'])) {
+
+			$keyword_id = clean_input($_GET['keyword_id']);
+			$search_params .= "AND ${table_name}.keyword_id=${keyword_id}";
+		}
 	}
 
 	$sql = "SELECT ${terms}.name AS keyword, ${table_name}.name AS name, order_number, amount, email, phone, keyword_id FROM ${table_name} 
@@ -76,6 +97,11 @@ function amazon_seller_dashboard_settings_details()
 				LIMIT ${limit} OFFSET ${offset}";
 
 	$products = $wpdb->get_results($sql, ARRAY_A);
+
+	$sql = "SELECT ${post_table_name}.post_title AS name, ${post_table_name}.ID AS job_id FROM ${post_table_name} 
+				${where_job_author} AND ${post_table_name}.post_status='publish' AND ${post_table_name}.post_type='amazon_seller_prod'";
+
+	$jobs = $wpdb->get_results($sql, ARRAY_A);
 
 	$sql = "SELECT ${terms}.term_id, ${terms}.name FROM ${term_taxonomy} 
 				INNER JOIN ${terms} ON ${term_taxonomy}.term_id=${terms}.term_id 
@@ -121,6 +147,21 @@ function amazon_seller_dashboard_settings_details()
 							</select>
 						</div>
 					<?php endif; ?>
+
+					<div class="form-group">
+						<label for="limit">Job Ids</label>
+						<select class="form-control hybrid-select" name="job_id">
+							<option value="">Select</option>
+							<?php
+							if (!empty($jobs)) {
+								foreach ($jobs as $job) {
+									$selected = clean_input($_GET['job_id']) == $job['job_id'] ? 'selected' : '';
+									echo '<option ' . $selected . ' value="' . $job['job_id'] . '">' . $job['name'] . '</option>';
+								}
+							}
+							?>
+						</select>
+					</div>
 
 					<div class="form-group">
 						<label for="limit">Keywords</label>
