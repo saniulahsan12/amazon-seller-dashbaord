@@ -1,7 +1,7 @@
 jQuery(document).ready(function($) {
 
 	$(".hybrid-select").select2({
-		placeholder: "Select Keyword",
+		placeholder: "Choose From Dropdown",
 	});
 
     $("#ProductSurveyForm").validate({
