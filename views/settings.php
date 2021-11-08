@@ -66,7 +66,7 @@ function amazon_seller_dashboard_settings_details()
 				$keywords_map = array_map(function($keyword) {
 					return $keyword->term_id;
 				}, $keywords);
-				$keywords_map = implode($keywords_map, ',');
+				$keywords_map = implode(',', $keywords_map);
 			} else {
 				$keywords_map = NULL;
 			}
