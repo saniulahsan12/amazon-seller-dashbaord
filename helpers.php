@@ -1,5 +1,96 @@
 <?php
 
+use function PHPSTORM_META\map;
+
+function wpdocs_remove_menus()
+{
+	if (get_current_user_id() == 1) {
+		return;
+	}
+	// remove_menu_page('index.php');                  //Dashboard
+	remove_menu_page('jetpack');                    //Jetpack* 
+	remove_menu_page('edit.php');                   //Posts
+	remove_menu_page('upload.php');                 //Media
+	remove_menu_page('edit.php?post_type=page');    //Pages
+	remove_menu_page('edit-comments.php');          //Comments
+	remove_menu_page('themes.php');                 //Appearance
+	remove_menu_page('plugins.php');                //Plugins
+	// remove_menu_page('users.php');                  //Users
+	remove_menu_page('tools.php');                  //Tools
+	remove_menu_page('options-general.php');        //Settings
+
+}
+add_action('admin_menu', 'wpdocs_remove_menus');
+
+function shapeSpace_remove_toolbar_nodes($wp_admin_bar)
+{
+	if (get_current_user_id() == 1) {
+		return;
+	}
+
+	$wp_admin_bar->remove_node('wp-logo');
+	$wp_admin_bar->remove_node('comments');
+	$wp_admin_bar->remove_node('customize');
+	$wp_admin_bar->remove_node('customize-background');
+	$wp_admin_bar->remove_node('customize-header');
+	$wp_admin_bar->remove_node('new-content');
+}
+add_action('admin_bar_menu', 'shapeSpace_remove_toolbar_nodes', 999);
+
+add_action('current_screen', 'wpdocs_this_screen');
+
+/**
+ * Run code on the admin widgets page
+ */
+function wpdocs_this_screen()
+{
+	if (get_current_user_id() == 1) {
+		return;
+	}
+
+	$currentScreen = get_current_screen();
+	$banned_pages = [
+		'upload',
+		'edit-comments',
+		'edit-post_tag',
+		'plugins',
+		'link-manager',
+		'edit-post',
+		'edit-page',
+		'site-themes-network',
+		'themes-network',
+		'sites-network',
+		'post',
+		'page',
+		'customize',
+		'themes',
+		'widgets',
+		'nav-menus',
+		'theme-editor',
+		'plugin-editor',
+		'plugin-install',
+		'tools',
+		'export',
+		'import',
+		'site-health',
+		'export-personal-data',
+		'erase-personal-data',
+		'options-general',
+		'options-writing',
+		'options-reading',
+		'options-discussion',
+		'options-media',
+		'options-permalink',
+		'options-privacy',
+		'options-discussion',
+	];
+
+	if (in_array($currentScreen->id, $banned_pages)) {
+		wp_redirect( get_admin_url() );
+		exit;
+	}
+}
+
 function amaz0n_seller_dashboard_scripts()
 {
 	wp_enqueue_style('amazon-seller-bootstrap-styles', BpaxAddFile::addFiles('assets/css', 'bootstrap.min', 'css', true));
