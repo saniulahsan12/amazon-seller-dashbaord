@@ -6,7 +6,7 @@ add_shortcode('amazon-seller-dashboard', 'amazon_seller_dashboard_settings_detai
 function amazon_seller_dashboard_settings_details()
 {
 
-
+	ob_start();
 	global $wpdb;
 
 	$table_name = $wpdb->prefix . 'amazon_seller_products';
@@ -230,9 +230,9 @@ function amazon_seller_dashboard_settings_details()
 											<th scope="col">Email</th>
 										<?php endif; ?>
 
-										<th scope="col">Order No.</th>
+										<th scope="col" class="text-left">Order No.</th>
 										<th scope="col" class="text-right">Amount</th>
-										<th scope="col">Keywords</th>
+										<th scope="col" class="text-center">Keywords</th>
 									</tr>
 								</thead>
 
@@ -249,7 +249,7 @@ function amazon_seller_dashboard_settings_details()
 
 											<td><?php echo $product['order_number']; ?></td>
 											<td class="text-right"><?php echo $product['amount']; ?></td>
-											<td><?php echo $product['keyword']; ?></td>
+											<td class="text-center"><?php echo $product['keyword']; ?></td>
 									</tbody>
 								<?php endforeach; ?>
 							</table>
@@ -278,4 +278,6 @@ function amazon_seller_dashboard_settings_details()
 		<?php echo do_shortcode('[easy-login-form]'); ?>
 	<?php endif; ?>
 <?php
+
+	return ob_get_clean();
 }

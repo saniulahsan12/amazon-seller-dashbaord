@@ -112,7 +112,7 @@ function cn_custom_errors()
 function cn_custom_show_error_messages()
 {
 	if ($codes = cn_custom_errors()->get_error_codes()) {
-		echo '<div class="alert alert-danger" style="margin-top:20px;">';
+		echo '<div class="alert alert-danger" style="margin-top:20px; color: red">';
 		// Loop error codes and display errors
 		foreach ($codes as $code) {
 			$message = cn_custom_errors()->get_error_message($code);
