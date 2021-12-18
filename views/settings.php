@@ -1,6 +1,8 @@
 <?php
 defined('ABSPATH') or die('No script kiddies please!');
 
+add_shortcode('amazon-seller-dashboard', 'amazon_seller_dashboard_settings_details');
+
 function amazon_seller_dashboard_settings_details()
 {
 
@@ -14,6 +16,7 @@ function amazon_seller_dashboard_settings_details()
 	$terms = $wpdb->prefix . 'terms';
 	$page = clean_input($_GET['page_no'] ?? 1);
 	$limit = clean_input($_GET['limit'] ?? 10);
+	// $limit = 1;
 	$offset = clean_input(($page - 1) * $limit ?? 0);
 	$client = clean_input($_GET['client'] ?? -1);
 
@@ -61,9 +64,9 @@ function amazon_seller_dashboard_settings_details()
 
 			$job_id = clean_input($_GET['job_id']);
 			$keywords = get_the_terms($job_id, 'keywords');
-	
+
 			if (!empty($keywords)) {
-				$keywords_map = array_map(function($keyword) {
+				$keywords_map = array_map(function ($keyword) {
 					return $keyword->term_id;
 				}, $keywords);
 				$keywords_map = implode(',', $keywords_map);
@@ -71,7 +74,6 @@ function amazon_seller_dashboard_settings_details()
 				$keywords_map = NULL;
 			}
 			$search_params .= "AND ${table_name}.keyword_id IN (${keywords_map}) ";
-
 		} else if (!empty($_GET['keyword_id'])) {
 
 			$keyword_id = clean_input($_GET['keyword_id']);
@@ -79,7 +81,7 @@ function amazon_seller_dashboard_settings_details()
 		}
 	}
 
-	$sql = "SELECT ${terms}.name AS keyword, ${table_name}.name AS name, order_number, amount, email, phone, keyword_id FROM ${table_name} 
+	$sql = "SELECT count(*) AS total FROM ${table_name} 
 				INNER JOIN ${terms} ON ${table_name}.keyword_id=${terms}.term_id 
 				${where_post_author} 
 				${search_params} 
@@ -108,165 +110,172 @@ function amazon_seller_dashboard_settings_details()
 				AND ${term_taxonomy}.taxonomy='keywords'";
 
 	$keywords = $wpdb->get_results($sql, ARRAY_A);
+
+
+	$current_user = wp_get_current_user();
 ?>
-	<div class="amazon-seller-dashboard-admin">
-		<form class="col-md-12" style="margin-top: 2%" method="get">
-			<div class="row">
-				<div class="col-md-12">
-					<h1><strong>Seller Dashboard</strong></h1>
-					<p></p>
-					<p></p>
-				</div>
-				<div class="col-md-2">
-					<input type="hidden" name="page" value="amazon-seller-dashboard-api-settings">
 
-					<h3><strong>Filter</strong></h3>
-					<hr>
-					<div class="form-group">
-						<label for="limit">Limit</label>
-						<select class="form-control" name="limit">
-							<option <?php echo $limit == 10 ? 'selected' : ''; ?> value="10">10</option>
-							<option <?php echo $limit == 50 ? 'selected' : ''; ?> value="50">50</option>
-							<option <?php echo $limit == 100 ? 'selected' : ''; ?> value="100">100</option>
-							<option <?php echo $limit == 500 ? 'selected' : ''; ?> value="500">500</option>
-							<option <?php echo $limit == 1000 ? 'selected' : ''; ?> value="1000">1000</option>
-						</select>
-					</div>
+	<?php if (is_user_logged_in()) : ?>
+		<?php if (in_array('administrator', (array) $current_user->roles) || in_array('amazon_seller_client', (array) $current_user->roles)) : ?>
+			<div class="amazon-seller-dashboard-admin">
+				<form class="row" method="get">
+					<div class="col-md-12">
+						<input type="hidden" name="page" value="amazon-seller-dashboard-api-settings">
 
-					<?php if (current_user_can('administrator')) : ?>
-						<div class="form-group">
-							<label for="client">Client</label>
-							<select class="form-control hybrid-select" name="client">
-								<option value="">Choose Client</option>
-								<?php
-								foreach ($users as $user) {
-									$selected = $client == $user->ID ? 'selected' : '';
-									echo '<option ' . $selected . ' value="' . $user->ID . '">' . esc_html($user->display_name) . ' [' . esc_html($user->user_email) . ']</option>';
-								}
-								?>
-							</select>
+						<h4><strong>Filter</strong></h4>
+						<hr>
+						<div class="row">
+							<div class="form-group col-md-4">
+								<label for="limit">Limit</label>
+								<select class="form-control" name="limit">
+									<option <?php echo $limit == 10 ? 'selected' : ''; ?> value="10">10</option>
+									<option <?php echo $limit == 50 ? 'selected' : ''; ?> value="50">50</option>
+									<option <?php echo $limit == 100 ? 'selected' : ''; ?> value="100">100</option>
+									<option <?php echo $limit == 500 ? 'selected' : ''; ?> value="500">500</option>
+									<option <?php echo $limit == 1000 ? 'selected' : ''; ?> value="1000">1000</option>
+								</select>
+							</div>
+
+							<?php if (current_user_can('administrator')) : ?>
+								<div class="form-group col-md-4">
+									<label for="client">Client</label>
+									<select class="form-control hybrid-select" name="client">
+										<option value="">Choose Client</option>
+										<?php
+										foreach ($users as $user) {
+											$selected = $client == $user->ID ? 'selected' : '';
+											echo '<option ' . $selected . ' value="' . $user->ID . '">' . esc_html($user->display_name) . ' [' . esc_html($user->user_email) . ']</option>';
+										}
+										?>
+									</select>
+								</div>
+							<?php endif; ?>
+
+							<div class="form-group col-md-4">
+								<label for="limit">Job Ids</label>
+								<select class="form-control hybrid-select" name="job_id">
+									<option value="">Select</option>
+									<?php
+									if (!empty($jobs)) {
+										foreach ($jobs as $job) {
+											$selected = clean_input($_GET['job_id']) == $job['job_id'] ? 'selected' : '';
+											echo '<option ' . $selected . ' value="' . $job['job_id'] . '">' . $job['name'] . '</option>';
+										}
+									}
+									?>
+								</select>
+							</div>
+
+							<div class="form-group col-md-4">
+								<label for="limit">Keywords</label>
+								<select class="form-control hybrid-select" name="keyword_id">
+									<option value="">Select</option>
+									<?php
+									if (!empty($keywords)) {
+										foreach ($keywords as $keyword) {
+											$selected = clean_input($_GET['keyword_id']) == $keyword['term_id'] ? 'selected' : '';
+											echo '<option ' . $selected . ' value="' . $keyword['term_id'] . '">' . $keyword['name'] . '</option>';
+										}
+									}
+									?>
+								</select>
+							</div>
 						</div>
-					<?php endif; ?>
 
-					<div class="form-group">
-						<label for="limit">Job Ids</label>
-						<select class="form-control hybrid-select" name="job_id">
-							<option value="">Select</option>
-							<?php
-							if (!empty($jobs)) {
-								foreach ($jobs as $job) {
-									$selected = clean_input($_GET['job_id']) == $job['job_id'] ? 'selected' : '';
-									echo '<option ' . $selected . ' value="' . $job['job_id'] . '">' . $job['name'] . '</option>';
-								}
-							}
-							?>
-						</select>
+						<h4><strong>Search</strong></h4>
+						<hr>
+						<div class="row">
+							<div class="form-group col-md-4">
+								<label for="order_number">Order Number</label>
+								<input type="text" class="form-control" name="order_number" value="<?php echo clean_input($_GET['order_number']) ?? ''; ?>">
+							</div>
+
+							<div class="form-group col-md-4">
+								<label for="order_number">Phone</label>
+								<input type="text" class="form-control" name="phone" value="<?php echo clean_input($_GET['phone']) ?? ''; ?>">
+							</div>
+
+							<div class="form-group col-md-4">
+								<label for="order_number">Email</label>
+								<input type="text" class="form-control" name="email" value="<?php echo clean_input($_GET['email']) ?? ''; ?>">
+							</div>
+
+							<div class="form-group col-md-4">
+								<label for="order_number">Name</label>
+								<input type="text" class="form-control" name="name" value="<?php echo clean_input($_GET['name']) ?? ''; ?>">
+							</div>
+						</div>
+
+						<div class="form-group">
+							<p>
+								<button class="btn btn-success" type="submit" name="submit">Apply</button>
+								<a href="<?php echo get_the_permalink(); ?>">
+									<button class="btn btn-warning" type="button" name="submit">Clear</button>
+								</a>
+							</p>
+						</div>
 					</div>
-
-					<div class="form-group">
-						<label for="limit">Keywords</label>
-						<select class="form-control hybrid-select" name="keyword_id">
-							<option value="">Select</option>
-							<?php
-							if (!empty($keywords)) {
-								foreach ($keywords as $keyword) {
-									$selected = clean_input($_GET['keyword_id']) == $keyword['term_id'] ? 'selected' : '';
-									echo '<option ' . $selected . ' value="' . $keyword['term_id'] . '">' . $keyword['name'] . '</option>';
-								}
-							}
-							?>
-						</select>
-					</div>
-
-					<h3><strong>Search</strong></h3>
-					<hr>
-					<div class="form-group">
-						<label for="order_number">Order Number</label>
-						<input type="text" class="form-control" name="order_number" value="<?php echo clean_input($_GET['order_number']) ?? ''; ?>">
-					</div>
-
-					<div class="form-group">
-						<label for="order_number">Phone</label>
-						<input type="text" class="form-control" name="phone" value="<?php echo clean_input($_GET['phone']) ?? ''; ?>">
-					</div>
-
-					<div class="form-group">
-						<label for="order_number">Email</label>
-						<input type="text" class="form-control" name="email" value="<?php echo clean_input($_GET['email']) ?? ''; ?>">
-					</div>
-
-					<div class="form-group">
-						<label for="order_number">Name</label>
-						<input type="text" class="form-control" name="name" value="<?php echo clean_input($_GET['name']) ?? ''; ?>">
-					</div>
-
-					<div class="form-group">
-						<p>
-							<button class="btn btn-success" type="submit" name="submit">Apply</button>
-							<a href="<?php echo admin_url('?page=amazon-seller-dashboard-api-settings'); ?>">
-								<button class="btn btn-warning" type="button" name="submit">Clear</button>
-							</a>
-						</p>
-					</div>
-				</div>
-				<div class="col-md-10">
-					<h3><strong>Results</strong></h3>
-					<hr>
-					<?php if (!empty($products)) : ?>
-						<table class="table table-bordered table-hover">
-							<thead>
-								<tr class="text-center">
-									<th scope="col" class="text-right">#</th>
-
-									<?php if (current_user_can('administrator')) : ?>
-										<th scope="col">Name</th>
-										<th scope="col">Phone</th>
-										<th scope="col">Email</th>
-									<?php endif; ?>
-
-									<th scope="col">Order Id.</th>
-									<th scope="col" class="text-right">Amount</th>
-									<th scope="col">Keywords</th>
-								</tr>
-							</thead>
-
-							<?php foreach ($products as $key => $product) : ?>
-								<tbody>
+					<div class="col-md-12">
+						<h4><strong>Results</strong></h4>
+						<hr>
+						<?php if (!empty($products)) : ?>
+							<table class="table table-bordered table-hover">
+								<thead>
 									<tr class="text-center">
-										<th scope="row" class="text-right"><?php echo $key + 1; ?></th>
+										<th scope="col" class="text-right">#</th>
 
 										<?php if (current_user_can('administrator')) : ?>
-											<td><?php echo $product['name']; ?></td>
-											<td><?php echo $product['phone']; ?></td>
-											<td><?php echo $product['email']; ?></td>
+											<th scope="col">Name</th>
+											<th scope="col">Phone</th>
+											<th scope="col">Email</th>
 										<?php endif; ?>
 
-										<td><?php echo $product['order_number']; ?></td>
-										<td class="text-right"><?php echo $product['amount']; ?></td>
-										<td><?php echo $product['keyword']; ?></td>
-								</tbody>
-							<?php endforeach; ?>
-						</table>
-					<?php endif; ?>
+										<th scope="col">Order Id.</th>
+										<th scope="col" class="text-right">Amount</th>
+										<th scope="col">Keywords</th>
+									</tr>
+								</thead>
 
-					<?php if (empty($products)) : ?>
-						<div class="alert alert-danger">
-							No Results found.
-						</div>
-					<?php endif; ?>
+								<?php foreach ($products as $key => $product) : ?>
+									<tbody>
+										<tr class="text-center">
+											<th scope="row" class="text-right"><?php echo $key + 1; ?></th>
 
-					<?php if (!empty($products) && ($total > 0) && ($total > $limit)) : ?>
-						<ul class="pagination">
-							<?php for ($i = 1; $i <= $total; $i++) : ?>
-								<li class="page-item <?php echo $i == $page ? 'active' : ''; ?>">
-									<button type="submit" name="page_no" value="<?php echo $i; ?>" class="page-link"><?php echo $i; ?></button>
-								</li>
-							<?php endfor; ?>
-						</ul>
-					<?php endif; ?>
-				</div>
+											<?php if (current_user_can('administrator')) : ?>
+												<td><?php echo $product['name']; ?></td>
+												<td><?php echo $product['phone']; ?></td>
+												<td><?php echo $product['email']; ?></td>
+											<?php endif; ?>
+
+											<td><?php echo $product['order_number']; ?></td>
+											<td class="text-right"><?php echo $product['amount']; ?></td>
+											<td><?php echo $product['keyword']; ?></td>
+									</tbody>
+								<?php endforeach; ?>
+							</table>
+						<?php endif; ?>
+
+						<?php if (empty($products)) : ?>
+							<div class="alert alert-danger">
+								No Results found.
+							</div>
+						<?php endif; ?>
+
+						<?php if (!empty($products) && ($total > 0) && ($total > $limit)) : ?>
+							<ul class="pagination">
+								<?php for ($i = 1; $i <= $total; $i++) : ?>
+									<li class="page-item <?php echo $i == $page ? 'active' : ''; ?>">
+										<button type="submit" name="page_no" value="<?php echo $i; ?>" class="page-link"><?php echo $i; ?></button>
+									</li>
+								<?php endfor; ?>
+							</ul>
+						<?php endif; ?>
+					</div>
+				</form>
 			</div>
-		</form>
-	</div>
+		<?php endif; ?>
+	<?php else : ?>
+		<?php echo do_shortcode('[easy-login-form]'); ?>
+	<?php endif; ?>
 <?php
 }

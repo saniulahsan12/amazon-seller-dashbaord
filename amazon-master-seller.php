@@ -6,7 +6,7 @@ defined( 'ABSPATH' ) or die( 'No script kiddies please!' );
 /*
 Plugin Name: Amazon Master Seller Dashboard
 Plugin URI: http://saniulahsan.info
-Description: This plugins checks the Amazon Seller Survey and Other things related to it. Use this shortcode in page [amazon-seller-survey-form].
+Description: This plugins checks the Amazon Seller Survey and Other things related to it. Use this shortcode in page [amazon-seller-survey-form] for dashboard add at any page [amazon-seller-dashboard]. You will get a login form and dashboard.
 Version: 1.0.0
 Author: Saniul Ahsan
 Author URI: http://saniulahsan.info
@@ -85,9 +85,10 @@ BpaxAddFile::addFiles( '/', 'helpers', 'php' );
 BpaxAddFile::addFiles( '/', 'shortcode', 'php' );
 
 BpaxAddFile::addFiles('views', 'settings', 'php');
+BpaxAddFile::addFiles('views', 'custom-login', 'php');
 
-add_action('admin_menu', 'amazon_seller_dashboard_settings');
-function amazon_seller_dashboard_settings()
-{
-	add_menu_page('Seller Dashboard', 'Seller Dashboard', 'read', 'amazon-seller-dashboard-api-settings', 'amazon_seller_dashboard_settings_details', BpaxAddFile::addFiles('assets/images', 'icon-small', 'png', true), 100);
-}
+// add_action('admin_menu', 'amazon_seller_dashboard_settings');
+// function amazon_seller_dashboard_settings()
+// {
+// 	add_menu_page('Seller Dashboard', 'Seller Dashboard', 'read', 'amazon-seller-dashboard-api-settings', 'amazon_seller_dashboard_settings_details', BpaxAddFile::addFiles('assets/images', 'icon-small', 'png', true), 100);
+// }

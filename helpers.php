@@ -1,7 +1,5 @@
 <?php
 
-use function PHPSTORM_META\map;
-
 function wpdocs_remove_menus()
 {
 	if (get_current_user_id() == 1) {
