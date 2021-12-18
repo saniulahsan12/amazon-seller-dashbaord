@@ -230,7 +230,7 @@ function amazon_seller_dashboard_settings_details()
 											<th scope="col">Email</th>
 										<?php endif; ?>
 
-										<th scope="col">Order Id.</th>
+										<th scope="col">Order No.</th>
 										<th scope="col" class="text-right">Amount</th>
 										<th scope="col">Keywords</th>
 									</tr>
