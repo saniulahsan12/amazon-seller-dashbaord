@@ -5,11 +5,11 @@ function cn_custom_login_form_fields()
 {
 
 	ob_start(); ?>
-	<div class="wrapper">
+	<div class="amazon-seller-dashboard-admin">
 		<form class="form-signin cn_custom_form" id="cn_custom_login_form" action="" method="post">
 			<?php if (!is_user_logged_in()) : ?>
 				<div class="form-group">
-					<input type="text" class="form-control" name="cn_custom_user_login" placeholder="Username" autofocus=""/>
+					<input type="text" class="form-control" name="cn_custom_user_login" placeholder="Username" autofocus="" />
 				</div>
 				<br>
 				<div class="form-group">
@@ -112,11 +112,11 @@ function cn_custom_errors()
 function cn_custom_show_error_messages()
 {
 	if ($codes = cn_custom_errors()->get_error_codes()) {
-		echo '<div class="alert alert-danger" style="margin-top:20px; color: red">';
+		echo '<div class="alert alert-danger" style="margin-top:20px;">';
 		// Loop error codes and display errors
 		foreach ($codes as $code) {
 			$message = cn_custom_errors()->get_error_message($code);
-			echo '<span class="error"><strong>' . __('Error') . '</strong>: ' . $message . '</span><br/>';
+			echo __('Error') . '</strong>: ' . $message . '<br/>';
 		}
 		echo '</div>';
 	}
