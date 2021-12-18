@@ -93,7 +93,8 @@ function cn_custom_login_member()
 				cn_custom_errors()->add('login_error', $user->get_error_message());
 			endif;
 
-			header('Location: ' . $_SERVER['REQUEST_URI']);
+			wp_redirect($_SERVER['REQUEST_URI']);
+			exit;
 		}
 	}
 }

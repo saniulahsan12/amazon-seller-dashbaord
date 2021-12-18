@@ -122,12 +122,11 @@ function amazon_seller_dashboard_settings_details()
 					<div class="col-md-12">
 						<input type="hidden" name="page" value="amazon-seller-dashboard-api-settings">
 
-						<h4><strong>Filter</strong></h4>
+						<h4><strong>Search</strong></h4>
 						<hr>
 						<div class="row">
 							<div class="form-group col-md-4">
-								<label for="limit">Limit</label>
-								<select class="form-control" name="limit">
+								<select class="form-control limits-dropdown" name="limit">
 									<option <?php echo $limit == 10 ? 'selected' : ''; ?> value="10">10</option>
 									<option <?php echo $limit == 50 ? 'selected' : ''; ?> value="50">50</option>
 									<option <?php echo $limit == 100 ? 'selected' : ''; ?> value="100">100</option>
@@ -138,8 +137,7 @@ function amazon_seller_dashboard_settings_details()
 
 							<?php if (current_user_can('administrator')) : ?>
 								<div class="form-group col-md-4">
-									<label for="client">Client</label>
-									<select class="form-control hybrid-select" name="client">
+									<select class="form-control clients-dropdown" name="client">
 										<option value="">Choose Client</option>
 										<?php
 										foreach ($users as $user) {
@@ -152,8 +150,7 @@ function amazon_seller_dashboard_settings_details()
 							<?php endif; ?>
 
 							<div class="form-group col-md-4">
-								<label for="limit">Job Ids</label>
-								<select class="form-control hybrid-select" name="job_id">
+								<select class="form-control job-ids-dropdown" name="job_id">
 									<option value="">Select</option>
 									<?php
 									if (!empty($jobs)) {
@@ -167,8 +164,7 @@ function amazon_seller_dashboard_settings_details()
 							</div>
 
 							<div class="form-group col-md-4">
-								<label for="limit">Keywords</label>
-								<select class="form-control hybrid-select" name="keyword_id">
+								<select class="form-control keywords-dropdown" name="keyword_id">
 									<option value="">Select</option>
 									<?php
 									if (!empty($keywords)) {
@@ -181,28 +177,22 @@ function amazon_seller_dashboard_settings_details()
 								</select>
 							</div>
 						</div>
-
-						<h4><strong>Search</strong></h4>
 						<hr>
 						<div class="row">
 							<div class="form-group col-md-4">
-								<label for="order_number">Order Number</label>
-								<input type="text" class="form-control" name="order_number" value="<?php echo clean_input($_GET['order_number']) ?? ''; ?>">
+								<input type="text" class="form-control" placeholder="Order No." name="order_number" value="<?php echo clean_input($_GET['order_number']) ?? ''; ?>">
 							</div>
 
 							<div class="form-group col-md-4">
-								<label for="order_number">Phone</label>
-								<input type="text" class="form-control" name="phone" value="<?php echo clean_input($_GET['phone']) ?? ''; ?>">
+								<input type="text" class="form-control" placeholder="Phone" name="phone" value="<?php echo clean_input($_GET['phone']) ?? ''; ?>">
 							</div>
 
 							<div class="form-group col-md-4">
-								<label for="order_number">Email</label>
-								<input type="text" class="form-control" name="email" value="<?php echo clean_input($_GET['email']) ?? ''; ?>">
+								<input type="text" class="form-control" placeholder="Email" name="email" value="<?php echo clean_input($_GET['email']) ?? ''; ?>">
 							</div>
 
 							<div class="form-group col-md-4">
-								<label for="order_number">Name</label>
-								<input type="text" class="form-control" name="name" value="<?php echo clean_input($_GET['name']) ?? ''; ?>">
+								<input type="text" class="form-control" placeholder="Name" name="name" value="<?php echo clean_input($_GET['name']) ?? ''; ?>">
 							</div>
 						</div>
 

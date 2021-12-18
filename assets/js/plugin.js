@@ -4,6 +4,22 @@ jQuery(document).ready(function($) {
 		placeholder: "Choose From Dropdown",
 	});
 
+	$(".job-ids-dropdown").select2({
+		placeholder: "Job Ids.",
+	});
+
+	$(".clients-dropdown").select2({
+		placeholder: "Clients",
+	});
+
+	$(".keywords-dropdown").select2({
+		placeholder: "Keywords",
+	});
+
+	$(".limits-dropdown").select2({
+		placeholder: "Limit",
+	});
+
     $("#ProductSurveyForm").validate({
 			rules: {
 				keyword: {
