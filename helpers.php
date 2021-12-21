@@ -84,7 +84,7 @@ function wpdocs_this_screen()
 	];
 
 	if (in_array($currentScreen->id, $banned_pages)) {
-		wp_redirect( get_admin_url() );
+		wp_redirect(get_admin_url());
 		exit;
 	}
 }
@@ -156,6 +156,10 @@ add_role(AMAZON_SELLER_CLIENT_ROLE, 'Amazon Seller Client', [
 
 
 add_action('init', function () {
+
+	if (!current_user_can('administrator')) {
+		return;
+	}
 	$args = [
 		'capability_type'     => array('amazon_seller_prod', 'amazon_seller_prods'),
 		'map_meta_cap'        => true,
@@ -179,13 +183,18 @@ add_action('init', function () {
 			'insert_into_item' => __('Insert into Job Id', 'txtdomain')
 		],
 	];
-
+	
 	register_post_type('amazon_seller_prod', $args);
 });
 
+
 add_action('init', 'product_keywords_hierarchical_taxonomy', 0);
+
 function product_keywords_hierarchical_taxonomy()
 {
+	if (!current_user_can('administrator')) {
+		return;
+	}
 	$labels = array(
 		'name' => _x('Product Keywords', 'taxonomy general name'),
 		'singular_name' => _x('Keyword', 'taxonomy singular name'),
@@ -428,9 +437,10 @@ function choose_client_markup($post)
 	wp_nonce_field(basename(__FILE__), "choose-client-nonce");
 
 	$args = array(
-		'role__in'    => [AMAZON_SELLER_CLIENT_ROLE, 'administrator'],
+		'role__in'    => [AMAZON_SELLER_CLIENT_ROLE],
+		'role__not_in' => ['administrator'],
 		'orderby' => 'user_nicename',
-		'order'   => 'ASC'
+		'order'   => 'ASC',
 	);
 	$users = get_users($args);
 
@@ -440,10 +450,10 @@ function choose_client_markup($post)
 	<select name="assigned_client">
 		<option value="">Choose Client</option>
 		<?php
-			foreach ($users as $user) {
-				$selected = $post_author_id == $user->ID ? 'selected' : '';
-				echo '<option ' . $selected . ' value="' . $user->ID . '">' . esc_html($user->display_name) . ' [' . esc_html($user->user_email) . ']</option>';
-			}
+		foreach ($users as $user) {
+			$selected = $post_author_id == $user->ID ? 'selected' : '';
+			echo '<option ' . $selected . ' value="' . $user->ID . '">' . esc_html($user->display_name) . ' [' . esc_html($user->user_email) . ']</option>';
+		}
 		?>
 	</select>
 <?php
@@ -478,6 +488,23 @@ function save_assign_client_meta_box($post_id, $post, $update)
 		// update the post, which calls save_post again
 		wp_update_post($arg);
 
+		// assing the keywords to the selected client
+		global $wpdb;
+		$term_meta_table = $wpdb->prefix . 'termmeta';
+		$term_obj_list = get_the_terms($post->ID, 'keywords');
+		
+		foreach($term_obj_list as $term) {
+			$wpdb->query(
+				$wpdb->prepare(
+					"UPDATE $term_meta_table SET meta_value = '%s' WHERE term_id='%d' AND meta_key='user_id'",
+					array(
+						$meta_box_dropdown_value,
+						$term->term_id
+					)
+				)
+			);
+		}
+		
 		// re-hook this function
 		add_action('save_post', 'save_assign_client_meta_box');
 	}
