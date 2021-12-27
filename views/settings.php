@@ -221,7 +221,7 @@ function amazon_seller_dashboard_settings_details()
 										<?php endif; ?>
 
 										<th scope="col" class="text-left">Order No.</th>
-										<th scope="col" class="text-right">Amount</th>
+										<th scope="col" class="text-right">Currency</th>
 										<th scope="col" class="text-center">Keywords</th>
 									</tr>
 								</thead>
