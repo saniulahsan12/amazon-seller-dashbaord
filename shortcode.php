@@ -67,8 +67,12 @@ function amazon_survey_seller_form()
     global $wpdb;
     $term_taxonomy = $wpdb->prefix . 'term_taxonomy';
     $terms = $wpdb->prefix . 'terms';
-    $sql = "SELECT ${terms}.term_id, ${terms}.name FROM ${term_taxonomy} 
+    $posts_table = $wpdb->prefix . 'posts';
+    $terms_relationship = $wpdb->prefix . 'term_relationships';
+    $sql = "SELECT ${posts_table}.post_status, ${terms}.term_id, ${terms}.name FROM ${term_taxonomy} 
 				INNER JOIN ${terms} ON ${term_taxonomy}.term_id=${terms}.term_id 
+				INNER JOIN ${terms_relationship} ON ${terms_relationship}.term_taxonomy_id=${term_taxonomy}.term_taxonomy_id 
+				INNER JOIN ${posts_table} ON ${posts_table}.ID=${terms_relationship}.object_Id 
 				AND ${term_taxonomy}.taxonomy='keywords'";
 
     $keywords = $wpdb->get_results($sql, ARRAY_A);
@@ -94,7 +98,8 @@ function amazon_survey_seller_form()
                 <label for="keyword">Choose the keyword <span class="required">*</span></label>
                 <select class="form-control hybrid-select" id="keyword" name="keyword">
                     <option value="">Choose</option>
-                    <?php foreach ($keywords as $keyword) : ?>
+                    <?php foreach ($keywords as $keyword) : if ($keyword['post_status'] != 'publish') : continue;
+                        endif; ?>
                         <option value="<?php echo $keyword['term_id']; ?>"> <?php echo $keyword['name']; ?> </option>
                     <?php endforeach; ?>
                 </select>
@@ -135,7 +140,10 @@ function amazon_survey_seller_form()
                 <div class="validation-box"></div>
             </div>
             <input type="hidden" name="redirect_url" value="<?php echo get_the_permalink(); ?>">
-            <button type="submit" id="submit_admin_product_survey" name="submit_admin_product_survey" class="form-submit-btn btn btn-primary">Submit</button>
+            <input type="checkbox" id="tos-status-checkbox" /> Accept terms and condition
+            <br>
+            <br>
+            <button disabled type="submit" id="submit_admin_product_survey" name="submit_admin_product_survey" class="form-submit-btn btn btn-primary">Submit</button>
         </form>
     </div>
 

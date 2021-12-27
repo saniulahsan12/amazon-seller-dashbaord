@@ -94,4 +94,17 @@ jQuery(document).ready(function($) {
 				$('#submit_admin_product_survey').attr('disabled','disabled');
 			}
 		});
+
+		$( '#tos-status-checkbox' ).on( 'change', function(e)
+			{
+			e.preventDefault();
+			if($('#tos-status-checkbox').is(':checked'))
+			{
+				$('#submit_admin_product_survey').prop('disabled', false);
+			}
+			else
+			{
+				$('#submit_admin_product_survey').prop('disabled', true);
+			}
+		});
 });
