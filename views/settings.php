@@ -122,6 +122,8 @@ function amazon_seller_dashboard_settings_details()
 
 	if (!empty($_GET['job_id'])) {
 		$keyword_filter = "AND ${term_relationships}.object_id=" . intval($_GET['job_id']);
+	} else {
+		$keyword_filter = '';
 	}
 
 	$sql = "SELECT ${terms}.term_id, ${terms}.name FROM ${term_taxonomy} 
