@@ -114,17 +114,24 @@ function amazon_seller_dashboard_settings_details()
 	$jobs = $wpdb->get_results($sql, ARRAY_A);
 
 	if (current_user_can('administrator')) {
-		$keyword_user = '';
+		$keyword_user = "WHERE true ";
 	} else {
 		$keyword_user = "WHERE ${termmeta}.meta_key='user_id' 
 				AND ${termmeta}.meta_value=" . get_current_user_id();
 	}
 
+	if (!empty($_GET['job_id'])) {
+		$keyword_filter = "AND ${term_relationships}.object_id=" . intval($_GET['job_id']);
+	}
+
 	$sql = "SELECT ${terms}.term_id, ${terms}.name FROM ${term_taxonomy} 
 				INNER JOIN ${terms} ON ${term_taxonomy}.term_id=${terms}.term_id 
 				INNER JOIN ${termmeta} ON ${termmeta}.term_id=${terms}.term_id 
+				INNER JOIN ${term_relationships} ON ${term_relationships}.term_taxonomy_id=${term_taxonomy}.term_taxonomy_id 
 				${keyword_user}
-				AND ${term_taxonomy}.taxonomy='keywords'";
+				AND ${term_taxonomy}.taxonomy='keywords' 
+				${keyword_filter}
+				";
 
 	$keywords = $wpdb->get_results($sql, ARRAY_A);
 
