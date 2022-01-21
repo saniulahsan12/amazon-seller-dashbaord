@@ -14,6 +14,7 @@ function amazon_seller_dashboard_settings_details()
 	$term_relationships = $wpdb->prefix . 'term_relationships';
 	$term_taxonomy = $wpdb->prefix . 'term_taxonomy';
 	$terms = $wpdb->prefix . 'terms';
+	$termmeta = $wpdb->prefix . 'termmeta';
 	$page = clean_input($_GET['page_no'] ?? 1);
 	$limit = clean_input($_GET['limit'] ?? 10);
 	// $limit = 1;
@@ -43,20 +44,24 @@ function amazon_seller_dashboard_settings_details()
 		$search_params .= "AND ${table_name}.order_number='${order_number}'";
 	}
 
-	if (!empty($_GET['phone'])) {
-		$phone = clean_input($_GET['phone']);
-		$search_params .= "AND ${table_name}.phone='${phone}'";
+	if (current_user_can('administrator')) {
+
+		if (!empty($_GET['phone'])) {
+			$phone = clean_input($_GET['phone']);
+			$search_params .= "AND ${table_name}.phone='${phone}'";
+		}
+	
+		if (!empty($_GET['email'])) {
+			$email = clean_input($_GET['email']);
+			$search_params .= "AND ${table_name}.email='${email}'";
+		}
+	
+		if (!empty($_GET['u_name'])) {
+			$name = clean_input($_GET['u_name']);
+			$search_params .= "AND ${table_name}.name LIKE '%${name}%'";
+		}
 	}
 
-	if (!empty($_GET['email'])) {
-		$email = clean_input($_GET['email']);
-		$search_params .= "AND ${table_name}.email='${email}'";
-	}
-
-	if (!empty($_GET['name'])) {
-		$name = clean_input($_GET['name']);
-		$search_params .= "AND ${table_name}.name LIKE '%${name}%'";
-	}
 
 	if (!empty($_GET['job_id']) || !empty($_GET['keyword_id'])) {
 
@@ -108,8 +113,17 @@ function amazon_seller_dashboard_settings_details()
 
 	$jobs = $wpdb->get_results($sql, ARRAY_A);
 
+	if (current_user_can('administrator')) {
+		$keyword_user = '';
+	} else {
+		$keyword_user = "WHERE ${termmeta}.meta_key='user_id' 
+				AND ${termmeta}.meta_value=" . get_current_user_id();
+	}
+
 	$sql = "SELECT ${terms}.term_id, ${terms}.name FROM ${term_taxonomy} 
 				INNER JOIN ${terms} ON ${term_taxonomy}.term_id=${terms}.term_id 
+				INNER JOIN ${termmeta} ON ${termmeta}.term_id=${terms}.term_id 
+				${keyword_user}
 				AND ${term_taxonomy}.taxonomy='keywords'";
 
 	$keywords = $wpdb->get_results($sql, ARRAY_A);
@@ -123,7 +137,7 @@ function amazon_seller_dashboard_settings_details()
 			<div class="amazon-seller-dashboard-admin">
 				<form class="row" method="get">
 					<div class="col-md-12">
-						<input type="hidden" name="page" value="amazon-seller-dashboard-api-settings">
+						<!-- <input type="hidden" name="page" value="amazon-seller-dashboard-api-settings"> -->
 
 						<h4><strong>Search</strong></h4>
 						<hr>
@@ -186,17 +200,19 @@ function amazon_seller_dashboard_settings_details()
 								<input type="text" class="form-control" placeholder="Order No." name="order_number" value="<?php echo clean_input($_GET['order_number']) ?? ''; ?>">
 							</div>
 
-							<div class="form-group col-md-4">
-								<input type="text" class="form-control" placeholder="Phone" name="phone" value="<?php echo clean_input($_GET['phone']) ?? ''; ?>">
-							</div>
+							<?php if (current_user_can('administrator')): ?>
+								<div class="form-group col-md-4">
+									<input type="text" class="form-control" placeholder="Phone" name="phone" value="<?php echo clean_input($_GET['phone']) ?? ''; ?>">
+								</div>
 
-							<div class="form-group col-md-4">
-								<input type="text" class="form-control" placeholder="Email" name="email" value="<?php echo clean_input($_GET['email']) ?? ''; ?>">
-							</div>
+								<div class="form-group col-md-4">
+									<input type="text" class="form-control" placeholder="Email" name="email" value="<?php echo clean_input($_GET['email']) ?? ''; ?>">
+								</div>
 
-							<div class="form-group col-md-4">
-								<input type="text" class="form-control" placeholder="Name" name="name" value="<?php echo clean_input($_GET['name']) ?? ''; ?>">
-							</div>
+								<div class="form-group col-md-4">
+									<input type="text" class="form-control" placeholder="Name" name="u_name" value="<?php echo clean_input($_GET['name']) ?? ''; ?>">
+								</div>
+							<?php endif; ?>
 						</div>
 
 						<div class="form-group">

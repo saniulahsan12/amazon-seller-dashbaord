@@ -140,7 +140,8 @@ function amazon_survey_seller_form()
                 <div class="validation-box"></div>
             </div>
             <input type="hidden" name="redirect_url" value="<?php echo get_the_permalink(); ?>">
-            <input type="checkbox" id="tos-status-checkbox" /> Accept terms and condition
+            <input type="checkbox" id="tos-status-checkbox" />
+            <a target="_blank" href="<?php echo get_settings('tos_uri_form'); ?>">Accept terms and condition</a>
             <br>
             <br>
             <button disabled type="submit" id="submit_admin_product_survey" name="submit_admin_product_survey" class="form-submit-btn btn btn-primary">Submit</button>

@@ -519,3 +519,19 @@ function add_custom_meta_box()
 }
 add_action("add_meta_boxes", "add_custom_meta_box");
 // ends
+
+
+
+
+add_filter('admin_init', 'register_my_general_settings_fields');
+function register_my_general_settings_fields()
+{
+	register_setting('general', 'tos_uri_form', 'esc_attr');
+	add_settings_field('tos_uri_form', '<label for="tos_uri_form">' . __('Rebate Form TOS Link', 'tos_uri_form') . '</label>', 'general_settings_custom_fields_html', 'general');
+}
+
+function general_settings_custom_fields_html()
+{
+	$value = get_option('tos_uri_form', '');
+	echo '<input type="text" class"widefat" id="tos_uri_form" name="tos_uri_form" value="' . $value . '" />';
+}
