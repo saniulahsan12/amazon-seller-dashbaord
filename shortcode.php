@@ -41,7 +41,7 @@ function save_seller_survey_data_to_db()
                     '%d',
                     '%s',
                     '%s',
-                    '%d',
+                    '%f',
                     '%s',
                     '%s',
                 ];

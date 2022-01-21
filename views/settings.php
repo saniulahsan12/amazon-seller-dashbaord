@@ -63,16 +63,19 @@ function amazon_seller_dashboard_settings_details()
 		if (!empty($_GET['job_id'])) {
 
 			$job_id = clean_input($_GET['job_id']);
-			$keywords = get_the_terms($job_id, 'keywords');
+			$sql = "SELECT term_taxonomy_id AS term_id FROM ${term_relationships} where object_id=${job_id}";
+			$keywords = $wpdb->get_results($sql, ARRAY_A);
 
 			if (!empty($keywords)) {
+				$keywords = $keywords[0];
 				$keywords_map = array_map(function ($keyword) {
-					return $keyword->term_id;
+					return $keyword;
 				}, $keywords);
 				$keywords_map = implode(',', $keywords_map);
 			} else {
 				$keywords_map = NULL;
 			}
+			
 			$search_params .= "AND ${table_name}.keyword_id IN (${keywords_map}) ";
 		} else if (!empty($_GET['keyword_id'])) {
 
@@ -238,7 +241,7 @@ function amazon_seller_dashboard_settings_details()
 											<?php endif; ?>
 
 											<td><?php echo $product['order_number']; ?></td>
-											<td class="text-right"><?php echo $product['amount']; ?></td>
+											<td class="text-right"><?php echo number_format((float)$product['amount'], 2, '.', ''); ?></td>
 											<td class="text-center"><?php echo $product['keyword']; ?></td>
 									</tbody>
 								<?php endforeach; ?>
