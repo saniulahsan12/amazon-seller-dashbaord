@@ -77,7 +77,7 @@ function amazon_seller_trigger_deactivating_plugin() {
 register_activation_hook( __FILE__, 'amazon_seller_trigger_activating_plugin' );
 
 // run the uninstall scripts upon the plugin deactivation
-register_deactivation_hook( __FILE__, 'amazon_seller_trigger_deactivating_plugin' );
+// register_deactivation_hook( __FILE__, 'amazon_seller_trigger_deactivating_plugin' );
 
 require_once AMAZON_SELLER_DASHBOARD . '/class/bootfile.class.php';
 

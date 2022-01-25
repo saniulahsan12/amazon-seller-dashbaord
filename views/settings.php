@@ -22,6 +22,8 @@ function amazon_seller_dashboard_settings_details()
 	$client = clean_input($_GET['client'] ?? -1);
 
 	$search_params = '';
+	$total = 0;
+	$products = [];
 
 	$args = array(
 		'role__in'    => [AMAZON_SELLER_CLIENT_ROLE, 'administrator'],
@@ -50,12 +52,12 @@ function amazon_seller_dashboard_settings_details()
 			$phone = clean_input($_GET['phone']);
 			$search_params .= "AND ${table_name}.phone='${phone}'";
 		}
-	
+
 		if (!empty($_GET['email'])) {
 			$email = clean_input($_GET['email']);
 			$search_params .= "AND ${table_name}.email='${email}'";
 		}
-	
+
 		if (!empty($_GET['u_name'])) {
 			$name = clean_input($_GET['u_name']);
 			$search_params .= "AND ${table_name}.name LIKE '%${name}%'";
@@ -80,7 +82,7 @@ function amazon_seller_dashboard_settings_details()
 			} else {
 				$keywords_map = NULL;
 			}
-			
+
 			$search_params .= "AND ${table_name}.keyword_id IN (${keywords_map}) ";
 		} else if (!empty($_GET['keyword_id'])) {
 
@@ -89,24 +91,27 @@ function amazon_seller_dashboard_settings_details()
 		}
 	}
 
-	$sql = "SELECT count(*) AS total FROM ${table_name} 
-				INNER JOIN ${terms} ON ${table_name}.keyword_id=${terms}.term_id 
-				${where_post_author} 
-				${search_params} 
-			";
+	if (sizeof($_GET) > 0) {
+		$sql = "SELECT count(*) AS total FROM ${table_name} 
+					INNER JOIN ${terms} ON ${table_name}.keyword_id=${terms}.term_id 
+					${where_post_author} 
+					${search_params} 
+				";
 
-	$total = $wpdb->get_results($sql, ARRAY_A);
-	if (!empty($total)) {
-		$total = $total[0]['total'];
+		$total = $wpdb->get_results($sql, ARRAY_A);
+		if (!empty($total)) {
+			$total = $total[0]['total'];
+		}
+
+		$sql = "SELECT ${terms}.name AS keyword, ${table_name}.name AS name, order_number, amount, email, phone, keyword_id FROM ${table_name} 
+					INNER JOIN ${terms} ON ${table_name}.keyword_id=${terms}.term_id 
+					${where_post_author} 
+					${search_params} 
+					LIMIT ${limit} OFFSET ${offset}";
+
+		$products = $wpdb->get_results($sql, ARRAY_A);
 	}
 
-	$sql = "SELECT ${terms}.name AS keyword, ${table_name}.name AS name, order_number, amount, email, phone, keyword_id FROM ${table_name} 
-				INNER JOIN ${terms} ON ${table_name}.keyword_id=${terms}.term_id 
-				${where_post_author} 
-				${search_params} 
-				LIMIT ${limit} OFFSET ${offset}";
-
-	$products = $wpdb->get_results($sql, ARRAY_A);
 
 	$sql = "SELECT ${post_table_name}.post_title AS name, ${post_table_name}.ID AS job_id FROM ${post_table_name} 
 				${where_job_author} AND ${post_table_name}.post_status='publish' AND ${post_table_name}.post_type='amazon_seller_prod'";
@@ -139,6 +144,25 @@ function amazon_seller_dashboard_settings_details()
 
 
 	$current_user = wp_get_current_user();
+
+	function amazon_seller_get_asin($keyword_id) {
+		$products = get_posts(array(
+			'post_type' => 'amazon_seller_prod',
+			'numberposts' => 1,
+			'tax_query' => array(
+				array(
+					'taxonomy' => 'keywords',
+					'field' => 'term_id',
+					'terms' => $keyword_id,
+					'include_children' => false
+				)
+			)
+		));
+		
+		if (!empty($products)) {
+			return get_post_meta($products[0]->ID, 'asin_number', true) ;
+		}
+	}
 ?>
 
 	<?php if (is_user_logged_in()) : ?>
@@ -209,7 +233,7 @@ function amazon_seller_dashboard_settings_details()
 								<input type="text" class="form-control" placeholder="Order No." name="order_number" value="<?php echo clean_input($_GET['order_number']) ?? ''; ?>">
 							</div>
 
-							<?php if (current_user_can('administrator')): ?>
+							<?php if (current_user_can('administrator')) : ?>
 								<div class="form-group col-md-4">
 									<input type="text" class="form-control" placeholder="Phone" name="phone" value="<?php echo clean_input($_GET['phone']) ?? ''; ?>">
 								</div>
@@ -251,6 +275,10 @@ function amazon_seller_dashboard_settings_details()
 										<th scope="col" class="text-left">Order No.</th>
 										<th scope="col" class="text-right">Currency</th>
 										<th scope="col" class="text-center">Keywords</th>
+
+										<?php if (current_user_can('administrator')) : ?>
+											<th scope="col">ASIN</th>
+										<?php endif; ?>
 									</tr>
 								</thead>
 
@@ -268,6 +296,10 @@ function amazon_seller_dashboard_settings_details()
 											<td><?php echo $product['order_number']; ?></td>
 											<td class="text-right"><?php echo number_format((float)$product['amount'], 2, '.', ''); ?></td>
 											<td class="text-center"><?php echo $product['keyword']; ?></td>
+
+											<?php if (current_user_can('administrator')) : ?>
+												<td><?php echo amazon_seller_get_asin($product['keyword_id']); ?></td>
+											<?php endif; ?>
 									</tbody>
 								<?php endforeach; ?>
 							</table>
