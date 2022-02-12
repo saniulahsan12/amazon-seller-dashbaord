@@ -107,4 +107,15 @@ jQuery(document).ready(function($) {
 				$('#submit_admin_product_survey').prop('disabled', true);
 			}
 		});
+
+		var scntDiv = $('#p_scents');
+        
+        $('#addScnt').on('click', function() {
+                $('<p><label for="p_scnts"><input style="width:80%" type="text" id="asin_number" size="20" name="asin_number[]" value=""/></label> <a href="#" class="remScnt">Remove</a></p>').appendTo(scntDiv);
+                return false;
+        });
+        
+        $('.remScnt').on('click', function() {
+                $(this).parents('p').remove();
+        });
 });

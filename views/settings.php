@@ -62,6 +62,13 @@ function amazon_seller_dashboard_settings_details()
 			$name = clean_input($_GET['u_name']);
 			$search_params .= "AND ${table_name}.name LIKE '%${name}%'";
 		}
+
+
+		if (!empty($_GET['fromDate']) && !empty($_GET['toDate'])) {
+			$fromDate = date('Y-m-d', strtotime(clean_input($_GET['fromDate'])));
+			$toDate = date('Y-m-d', strtotime(clean_input($_GET['toDate'])));
+			$search_params .= "AND ${table_name}.created >= '${fromDate}' AND ${table_name}.created <= '${toDate}'";
+		}
 	}
 
 
@@ -112,7 +119,6 @@ function amazon_seller_dashboard_settings_details()
 		$products = $wpdb->get_results($sql, ARRAY_A);
 	}
 
-
 	$sql = "SELECT ${post_table_name}.post_title AS name, ${post_table_name}.ID AS job_id FROM ${post_table_name} 
 				${where_job_author} AND ${post_table_name}.post_status='publish' AND ${post_table_name}.post_type='amazon_seller_prod'";
 
@@ -145,7 +151,8 @@ function amazon_seller_dashboard_settings_details()
 
 	$current_user = wp_get_current_user();
 
-	function amazon_seller_get_asin($keyword_id) {
+	function amazon_seller_get_asin($keyword_id)
+	{
 		$products = get_posts(array(
 			'post_type' => 'amazon_seller_prod',
 			'numberposts' => 1,
@@ -158,9 +165,9 @@ function amazon_seller_dashboard_settings_details()
 				)
 			)
 		));
-		
+
 		if (!empty($products)) {
-			return get_post_meta($products[0]->ID, 'asin_number', true) ;
+			return implode(', ', json_decode(get_post_meta($products[0]->ID, 'asin_number', true)));
 		}
 	}
 ?>
@@ -245,6 +252,15 @@ function amazon_seller_dashboard_settings_details()
 								<div class="form-group col-md-4">
 									<input type="text" class="form-control" placeholder="Name" name="u_name" value="<?php echo clean_input($_GET['name']) ?? ''; ?>">
 								</div>
+
+								<div class="form-group col-md-4">
+									<input type="date" class="form-control" placeholder="Name" name="fromDate" value="<?php echo clean_input($_GET['fromDate']) ?? ''; ?>">
+								</div>
+
+								<div class="form-group col-md-4">
+									<input type="date" class="form-control" placeholder="Name" name="toDate" value="<?php echo clean_input($_GET['toDate']) ?? ''; ?>">
+								</div>
+
 							<?php endif; ?>
 						</div>
 

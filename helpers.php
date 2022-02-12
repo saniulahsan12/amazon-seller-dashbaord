@@ -295,7 +295,21 @@ function asin_number_meta_box_callback($post)
 
 	$value = get_post_meta($post->ID, 'asin_number', true);
 
-	echo '<input type="text" style="width:100%" id="asin_number" name="asin_number" value="' . esc_attr($value) . '">';
+	if (!empty($value)) {
+		$value = json_decode($value);
+	}
+
+	echo '<h2><a href="#" id="addScnt">Add ASIN</a></h2>';
+
+	echo '<div id="p_scents">';
+	foreach($value as $v) {
+		echo '<p>
+				<label for="p_scnts"><input style="width: 80%;" type="text" id="asin_number" size="20" name="asin_number[]" value="' . $v . '" /></label> <a href="#" class="remScnt">Remove</a>
+			</p>
+			';
+		}
+	echo '</div>';
+
 }
 
 /**
@@ -322,16 +336,16 @@ function save_asin_number_meta_box_data($post_id)
 	}
 	/* OK, it's safe for us to save the data now. */
 
+	
+	// Sanitize user input.
+	$my_data = $_POST['asin_number'];
+	
 	// Make sure that it is set.
 	if (!isset($_POST['asin_number'])) {
-		return;
+		$my_data = null;
 	}
-
-	// Sanitize user input.
-	$my_data = sanitize_text_field($_POST['asin_number']);
-
 	// Update the meta field in the database.
-	update_post_meta($post_id, 'asin_number', $my_data);
+	update_post_meta($post_id, 'asin_number', json_encode($my_data));
 }
 
 add_action('save_post', 'save_asin_number_meta_box_data');
