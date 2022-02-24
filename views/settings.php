@@ -14,6 +14,17 @@ function seller_increment_calculation($amount, $percentage)
 	return format_to_currency($amount_calculated);
 }
 
+function seller_grand_total_calculation($products)
+{
+	$grand_total = [];
+
+	foreach ($products as $key => $product) {
+		$grand_total[] = seller_increment_calculation($product['amount'], $product['percentage']);
+	}
+
+	return format_to_currency(array_sum($grand_total));
+}
+
 function amazon_seller_dashboard_settings_details()
 {
 
@@ -148,7 +159,7 @@ function amazon_seller_dashboard_settings_details()
 	}
 
 	$current_user = wp_get_current_user();
-	
+
 ?>
 
 	<?php if (is_user_logged_in()) : ?>
@@ -277,8 +288,8 @@ function amazon_seller_dashboard_settings_details()
 									</tr>
 								</thead>
 
-								<?php foreach ($products as $key => $product) : ?>
-									<tbody>
+								<tbody>
+									<?php foreach ($products as $key => $product) : ?>
 										<tr class="text-center">
 											<th scope="row" class="text-right"><?php echo $key + 1; ?></th>
 
@@ -297,8 +308,18 @@ function amazon_seller_dashboard_settings_details()
 												<td class="text-right"><?php echo $product['percentage']; ?></td>
 												<td class="text-right"><?php echo seller_increment_calculation($product['amount'], $product['percentage']); ?></td>
 											<?php endif; ?>
-									</tbody>
-								<?php endforeach; ?>
+										<?php endforeach; ?>
+								</tbody>
+								<tfoot>
+									<tr class="text-right">
+										<td colspan="9">Total</td>
+										<td>
+											<label id="lblTotal">
+												<?php echo seller_grand_total_calculation($products); ?>
+											</label>
+										</td>
+									</tr>
+								</tfoot>
 							</table>
 						<?php endif; ?>
 
