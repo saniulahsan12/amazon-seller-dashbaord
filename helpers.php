@@ -251,9 +251,14 @@ function asin_number_meta_box_callback($post)
 	foreach($asin_number as $key => $v) {
 		echo '<p>
 				<label for="p_scnts">
-					<input style="width: 15%;" type="text" id="asin_number" name="asin_number[]" value="' . $v . '" />
-					<input style="width: 50%;" type="text" id="asin_category" name="asin_category[]" value="' . $asin_category[$key] . '" />
-					<input style="width: 15%;" type="text" id="asin_percentage" name="asin_percentage[]" value="' . $asin_percentage[$key] . '" />
+					<input placeholder="ASIN" style="width: 15%;" type="text" id="asin_number" name="asin_number[]" value="' . $v . '" />
+					<input placeholder="Category" style="width: 50%;" type="text" id="asin_category" name="asin_category[]" value="' . $asin_category[$key] . '" />
+					<select style="width: 15%;" id="asin_percentage" name="asin_percentage[]">
+						<option ' . ($asin_percentage[$key] == 5 ? 'selected' : '') . ' value="5">5%</option>
+						<option ' . ($asin_percentage[$key] == 10 ? 'selected' : '') . ' value="10">10%</option>
+						<option ' . ($asin_percentage[$key] == 15 ? 'selected' : '') . ' value="15">15%</option>
+						<option ' . ($asin_percentage[$key] == 20 ? 'selected' : '') . ' value="20">20%</option>
+					</select>
 				</label>
 				<button type="button" class="remScnt button button-primary button-large">
 					<span style="margin-top: 6px;" class="dashicons dashicons-no-alt"></span>

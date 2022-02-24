@@ -78,7 +78,7 @@ jQuery(document).ready(function ($) {
 	var scntDiv = $('#p_scents');
 
 	$('#addScnt').on('click', function () {
-		$('<p><label for="p_scnts"><input style="width: 15%;" type="text" id="asin_number" name="asin_number[]"/><input style="width: 50%;" type="text" id="asin_category" name="asin_category[]"/><input style="width: 15%;" type="text" id="asin_percentage" name="asin_percentage[]"/></label><button type="button" class="remScnt button button-primary button-large"><span style="margin-top: 6px;" onclick=\'jQuery(this).parents("p").remove()\' class="dashicons dashicons-no-alt"></span></button></p>')
+		$('<p><label for="p_scnts"><input placeholder="ASIN" style="width: 15%;" type="text" id="asin_number" name="asin_number[]"/><input placeholder="Category" style="width: 50%;" type="text" id="asin_category" name="asin_category[]"/><select style="width: 15%;" id="asin_percentage" name="asin_percentage[]"> <option value="5">5%</option> <option value="10">10%</option> <option value="15">15%</option> <option value="20">20%</option></select></label><button type="button" class="remScnt button button-primary button-large"><span style="margin-top: 6px;" onclick=\'jQuery(this).parents("p").remove()\' class="dashicons dashicons-no-alt"></span></button></p>')
 			.appendTo($(scntDiv));
 		return false;
 	});
