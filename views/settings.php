@@ -66,6 +66,11 @@ function amazon_seller_dashboard_settings_details()
 		$search_params .= " AND ${table_name}.keyword LIKE '%${keyword}%'";
 	}
 
+	if (!empty($_GET['order_number'])) {
+		$order_number = clean_input($_GET['order_number']);
+		$search_params .= " AND ${table_name}.order_number LIKE '%${order_number}%'";
+	}
+
 	if (current_user_can('administrator')) {
 
 		if (!empty($_GET['phone'])) {
@@ -310,16 +315,20 @@ function amazon_seller_dashboard_settings_details()
 											<?php endif; ?>
 										<?php endforeach; ?>
 								</tbody>
-								<tfoot>
-									<tr class="text-right">
-										<td colspan="9">Total</td>
-										<td>
-											<label id="lblTotal">
-												<?php echo seller_grand_total_calculation($products); ?>
-											</label>
-										</td>
-									</tr>
-								</tfoot>
+
+								<?php if (current_user_can('administrator')) : ?>
+									<tfoot>
+										<tr class="text-right">
+											<td colspan="9">Total</td>
+											<td>
+												<label id="lblTotal">
+													<?php echo seller_grand_total_calculation($products); ?>
+												</label>
+											</td>
+										</tr>
+									</tfoot>
+								<?php endif; ?>
+
 							</table>
 						<?php endif; ?>
 

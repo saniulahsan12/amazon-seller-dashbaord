@@ -157,9 +157,6 @@ add_role(AMAZON_SELLER_CLIENT_ROLE, 'Amazon Seller Client', [
 
 add_action('init', function () {
 
-	if (!current_user_can('administrator')) {
-		return;
-	}
 	$args = [
 		'capability_type'     => array('amazon_seller_prod', 'amazon_seller_prods'),
 		'map_meta_cap'        => true,
