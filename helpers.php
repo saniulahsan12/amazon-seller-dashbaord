@@ -188,61 +188,6 @@ add_action('init', function () {
 });
 
 
-add_action('init', 'product_keywords_hierarchical_taxonomy', 0);
-
-function product_keywords_hierarchical_taxonomy()
-{
-	if (!current_user_can('administrator')) {
-		return;
-	}
-	$labels = array(
-		'name' => _x('Product Keywords', 'taxonomy general name'),
-		'singular_name' => _x('Keyword', 'taxonomy singular name'),
-		'search_items' =>  __('Search Keywords'),
-		'all_items' => __('All Keywords'),
-		'parent_item' => __('Parent Keyword'),
-		'parent_item_colon' => __('Parent Keyword:'),
-		'edit_item' => __('Edit Keyword'),
-		'update_item' => __('Update Keyword'),
-		'add_new_item' => __('Add New Keyword'),
-		'new_item_name' => __('New Keyword Name'),
-		'menu_name' => __('Keywords'),
-	);
-
-	register_taxonomy(
-		'keywords',
-		array('amazon_seller_prod'),
-		array(
-			'hierarchical' => true,
-			'labels' => $labels,
-			'show_ui' => true,
-			'show_in_rest' => false,
-			'show_admin_column' => true,
-			'query_var' => true,
-			'rewrite' => array('slug' => 'keywords'),
-			'capabilities' => array(
-				'manage_terms' => 'manage_keywords',
-				'delete_terms' => 'delete_keywords',
-				'edit_terms' => 'edit_keywords',
-				'assign_terms' => 'assign_keywords',
-			)
-		)
-	);
-}
-
-/**
- * Hide tags from quick edit if user does not have admin priviledges
- */
-function hide_tags_from_quick_edit($show_in_quick_edit, $taxonomy_name, $post_type)
-{
-	if ('post_tag' === 'keywords' && !current_user_can('edit_others_posts')) {
-		return false;
-	} else {
-		return $show_in_quick_edit;
-	}
-}
-add_filter('quick_edit_show_taxonomy', 'hide_tags_from_quick_edit', 10, 3);
-
 add_action('admin_init', 'amazon_seller_add_role_caps', 999);
 function amazon_seller_add_role_caps()
 {
@@ -262,17 +207,6 @@ function amazon_seller_add_role_caps()
 		$role->add_cap('delete_others_amazon_seller_prods');
 		$role->add_cap('delete_private_amazon_seller_prods');
 		$role->add_cap('delete_published_amazon_seller_prods');
-
-		// add a new capability
-		$capabilities = array(
-			'manage_keywords',
-			'delete_keywords',
-			'edit_keywords',
-			'assign_keywords',
-		);
-		foreach ($capabilities as $cap) {
-			$role->add_cap($cap);
-		}
 	}
 }
 
@@ -368,62 +302,12 @@ function posts_for_current_author($query)
 }
 add_filter('pre_get_posts', 'posts_for_current_author');
 
-
-function my_create($term_id, $tt_id, $taxonomy)
-{
-	return add_term_meta($term_id, 'user_id', get_current_user_id());
-}
-add_action('create_term', 'my_create', 10, 3);
-
-
-add_filter('get_terms_args', 'user_self_created_terms_only', 10, 2);
-function user_self_created_terms_only($args, $taxonomies)
-{
-
-	if (!current_user_can('edit_others_posts')) {
-
-		global $wpdb;
-		global $typenow;
-
-		$results = $wpdb->get_results("SELECT term_id FROM {$wpdb->prefix}termmeta WHERE meta_key='user_id' and meta_value = '" . get_current_user_id() . "'", OBJECT);
-
-		$results_mapped = [];
-		if (!empty($results)) {
-			$results_mapped = array_map(function ($result) {
-				return $result->term_id;
-			}, $results);
-		}
-		if ($typenow == 'amazon_seller_prod') {
-			// check whether we're currently filtering selected taxonomy
-			if (implode('', $taxonomies) == 'keywords') {
-				$cats = $results_mapped; // as an array
-
-				if (empty($cats))
-					$args['include'] = array(99999999); // no available categories
-				else
-					$args['include'] = $cats;
-			}
-		}
-	}
-	return $args;
-}
-
-// Remove pointless post meta boxes
-function FRANK_TWEAKS_current_screen()
+// prohibit unauthorized user from accessing others posts edit.
+function amazon_seller_prod_TWEAKS_current_screen()
 {
 	if (function_exists('get_current_screen') && !current_user_can('edit_others_posts')) {
 
 		$current_screen = get_current_screen();
-
-		if ($current_screen->post_type === 'amazon_seller_prod' && $_GET['taxonomy'] === 'keywords' && !empty($_GET['tag_ID'])) {
-			global $wpdb;
-			$term_id = $_GET['tag_ID'];
-			$results = $wpdb->get_results("SELECT term_id FROM {$wpdb->prefix}termmeta WHERE meta_key='user_id' and term_id='" . $term_id . "' and meta_value = '" . get_current_user_id() . "'", OBJECT);
-
-			if (empty($results)) {
-				wp_redirect(admin_url('edit-tags.php?taxonomy=keywords&post_type=amazon_seller_prod'));
-			}
-		}
 
 		if ($current_screen->base === 'post' && !empty($_GET['post']) && $_GET['action'] === 'edit') {
 			$post_author_id = get_post_field('post_author', $_GET['post']);
@@ -434,16 +318,8 @@ function FRANK_TWEAKS_current_screen()
 		}
 	}
 }
-add_action('current_screen', 'FRANK_TWEAKS_current_screen');
+add_action('current_screen', 'amazon_seller_prod_TWEAKS_current_screen');
 
-function remove_quick_edit($actions)
-{
-	if (!current_user_can('edit_others_posts')) {
-		unset($actions['inline hide-if-no-js']);
-	}
-	return $actions;
-}
-add_filter('post_row_actions', 'remove_quick_edit', 10, 1);
 
 // add custom field to custom post type
 function choose_client_markup($post)
@@ -501,23 +377,6 @@ function save_assign_client_meta_box($post_id, $post, $update)
 
 		// update the post, which calls save_post again
 		wp_update_post($arg);
-
-		// assing the keywords to the selected client
-		global $wpdb;
-		$term_meta_table = $wpdb->prefix . 'termmeta';
-		$term_obj_list = get_the_terms($post->ID, 'keywords');
-		
-		foreach($term_obj_list as $term) {
-			$wpdb->query(
-				$wpdb->prepare(
-					"UPDATE $term_meta_table SET meta_value = '%s' WHERE term_id='%d' AND meta_key='user_id'",
-					array(
-						$meta_box_dropdown_value,
-						$term->term_id
-					)
-				)
-			);
-		}
 		
 		// re-hook this function
 		add_action('save_post', 'save_assign_client_meta_box');
