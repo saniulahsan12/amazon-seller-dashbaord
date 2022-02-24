@@ -78,7 +78,7 @@ jQuery(document).ready(function ($) {
 	var scntDiv = $('#p_scents');
 
 	$('#addScnt').on('click', function () {
-		$('<p><label for="p_scnts"><input style="width:80%" type="text" id="asin_number" size="20" name="asin_number[]" value=""/></label> <a href="#" class="remScnt" onclick=\'jQuery(this).parents("p").remove()\'>Remove</a></p>')
+		$('<p><label for="p_scnts"><input style="width: 15%;" type="text" id="asin_number" name="asin_number[]"/><input style="width: 50%;" type="text" id="asin_category" name="asin_category[]"/><input style="width: 15%;" type="text" id="asin_percentage" name="asin_percentage[]"/></label><button type="button" class="remScnt button button-primary button-large"><span style="margin-top: 6px;" onclick=\'jQuery(this).parents("p").remove()\' class="dashicons dashicons-no-alt"></span></button></p>')
 			.appendTo($(scntDiv));
 		return false;
 	});

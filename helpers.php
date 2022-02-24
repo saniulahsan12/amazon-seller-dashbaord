@@ -227,18 +227,37 @@ function asin_number_meta_box_callback($post)
 	// Add a nonce field so we can check for it later.
 	wp_nonce_field('asin_number_nonce', 'asin_number_nonce');
 
-	$value = get_post_meta($post->ID, 'asin_number', true);
+	$asin_number = get_post_meta($post->ID, 'asin_number', true);
+	$asin_category = get_post_meta($post->ID, 'asin_category', true);
+	$asin_percentage = get_post_meta($post->ID, 'asin_percentage', true);
 
-	if (!empty($value)) {
-		$value = json_decode($value);
+	if (!empty($asin_number)) {
+		$asin_number = json_decode($asin_number);
+	}
+	if (!empty($asin_category)) {
+		$asin_category = json_decode($asin_category);
+	}
+	if (!empty($asin_percentage)) {
+		$asin_percentage = json_decode($asin_percentage);
 	}
 
-	echo '<h2><a href="#" id="addScnt">Add ASIN</a></h2>';
+	echo '<h2>
+			<button type="button" class="button button-primary button-large" id="addScnt">
+				<span style="margin-top: 7px;" class="dashicons dashicons-plus">
+			</button>
+		</h2>';
 
 	echo '<div id="p_scents">';
-	foreach($value as $v) {
+	foreach($asin_number as $key => $v) {
 		echo '<p>
-				<label for="p_scnts"><input style="width: 80%;" type="text" id="asin_number" size="20" name="asin_number[]" value="' . $v . '" /></label> <a href="#" class="remScnt">Remove</a>
+				<label for="p_scnts">
+					<input style="width: 15%;" type="text" id="asin_number" name="asin_number[]" value="' . $v . '" />
+					<input style="width: 50%;" type="text" id="asin_category" name="asin_category[]" value="' . $asin_category[$key] . '" />
+					<input style="width: 15%;" type="text" id="asin_percentage" name="asin_percentage[]" value="' . $asin_percentage[$key] . '" />
+				</label>
+				<button type="button" class="remScnt button button-primary button-large">
+					<span style="margin-top: 6px;" class="dashicons dashicons-no-alt"></span>
+				</button>
 			</p>
 			';
 		}
@@ -270,16 +289,26 @@ function save_asin_number_meta_box_data($post_id)
 	}
 	/* OK, it's safe for us to save the data now. */
 
-	
+
 	// Sanitize user input.
-	$my_data = $_POST['asin_number'];
+	$asin_number = $_POST['asin_number'];
+	$asin_category = $_POST['asin_category'];
+	$asin_percentage = $_POST['asin_percentage'];
 	
 	// Make sure that it is set.
 	if (!isset($_POST['asin_number'])) {
-		$my_data = null;
+		$asin_number = null;
+	}
+	if (!isset($_POST['asin_category'])) {
+		$asin_category = null;
+	}
+	if (!isset($_POST['asin_percentage'])) {
+		$asin_percentage = null;
 	}
 	// Update the meta field in the database.
-	update_post_meta($post_id, 'asin_number', json_encode($my_data));
+	update_post_meta($post_id, 'asin_number', json_encode($asin_number));
+	update_post_meta($post_id, 'asin_category', json_encode($asin_category));
+	update_post_meta($post_id, 'asin_percentage', json_encode($asin_percentage));
 }
 
 add_action('save_post', 'save_asin_number_meta_box_data');
