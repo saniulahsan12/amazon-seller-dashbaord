@@ -7,7 +7,7 @@ defined( 'ABSPATH' ) or die( 'No script kiddies please!' );
 Plugin Name: Amazon Master Seller Dashboard
 Plugin URI: http://saniulahsan.info
 Description: This plugins checks the Amazon Seller Survey and Other things related to it. Use this shortcode in page [amazon-seller-survey-form] for dashboard add at any page [amazon-seller-dashboard]. You will get a login form and dashboard.
-Version: 1.0.0
+Version: 2.0.0
 Author: Saniul Ahsan
 Author URI: http://saniulahsan.info
 Text Domain: amazon-seller-dash
