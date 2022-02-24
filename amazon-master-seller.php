@@ -32,6 +32,7 @@ function amazon_seller_trigger_activating_plugin() {
 				`id` bigint NOT NULL AUTO_INCREMENT PRIMARY KEY,
 				`keyword` varchar(255) NOT NULL,
 				`client_id` bigint NOT NULL,
+				`job_id` bigint NOT NULL,
 				`name` varchar(255) NOT NULL,
 				`order_number` varchar(255) NOT NULL,
 				`amount` double NOT NULL,
@@ -45,6 +46,9 @@ function amazon_seller_trigger_activating_plugin() {
 		dbDelta( $sql );
 
 		$sql = 'CREATE  INDEX idx_keyword ON '. $wpdb->prefix . 'amazon_seller_products(keyword);';
+		$wpdb->query($sql);
+
+		$sql = 'CREATE  INDEX idx_job_id ON ' . $wpdb->prefix . 'amazon_seller_products(job_id);';
 		$wpdb->query($sql);
 
 		$sql = 'CREATE  INDEX idx_order_number ON ' . $wpdb->prefix . 'amazon_seller_products(order_number);';

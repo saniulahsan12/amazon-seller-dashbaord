@@ -22,6 +22,7 @@ function save_seller_survey_data_to_db()
 
                 $data = [
                     'client_id' => clean_input($_POST['client_id']),
+                    'job_id' => clean_input($_POST['job_id']),
                     'keyword' => clean_input($_POST['keyword']),
                     'asin' => clean_input($_POST['asin']),
                     'percentage' => clean_input($_POST['percentage']),
@@ -32,6 +33,7 @@ function save_seller_survey_data_to_db()
                     'phone' => clean_input($_POST['phone']),
                 ];
                 $format = [
+                    '%d',
                     '%d',
                     '%s',
                     '%s',
@@ -67,6 +69,7 @@ function amazon_survey_seller_form()
         'posts_per_page'   => -1,
         'post_status'      => 'publish',
         'post_type'      => 'amazon_seller_prod',
+        'order' => 'ASC'
     );
 
     $jobs = get_posts($args);
@@ -89,6 +92,7 @@ function amazon_survey_seller_form()
 
             foreach ($asin_number as $key => $v) {
                 $data_set[] = [
+                    'job_id' => $job->ID,
                     'client_id' => $job->post_author,
                     'asin' => $v,
                     'keywords' => explode(',', $asin_category[$key]),
@@ -105,6 +109,7 @@ function amazon_survey_seller_form()
             jQuery('#amazon_seller_prod_client_id').val(selection.data('client'));
             jQuery('#amazon_seller_prod_asin').val(selection.data('asin'));
             jQuery('#amazon_seller_prod_percentage').val(selection.data('percentage'));
+            jQuery('#amazon_seller_prod_job_id').val(selection.data('job'));
         }
     </script>
     <div class="amazon-seller-dashboard-admin">
@@ -130,7 +135,7 @@ function amazon_survey_seller_form()
                     <option value="">Choose</option>
                     <?php foreach ($data_set as $data) : ?>
                         <?php foreach ($data['keywords'] as $keyword) : ?>
-                            <option data-client="<?php echo $data['client_id']; ?>" data-asin="<?php echo $data['asin']; ?>" data-percentage="<?php echo $data['percentage']; ?>" value="<?php echo $keyword; ?>
+                            <option data-job="<?php echo $data['job_id']; ?>"  data-client="<?php echo $data['client_id']; ?>" data-asin="<?php echo $data['asin']; ?>" data-percentage="<?php echo $data['percentage']; ?>" value="<?php echo $keyword; ?>
                                 "> <?php echo $keyword; ?>
                             </option>
                         <?php endforeach; ?>
@@ -139,6 +144,7 @@ function amazon_survey_seller_form()
                 <input type="hidden" id="amazon_seller_prod_client_id" name="client_id" value="">
                 <input type="hidden" id="amazon_seller_prod_asin" name="asin" value="">
                 <input type="hidden" id="amazon_seller_prod_percentage" name="percentage" value="">
+                <input type="hidden" id="amazon_seller_prod_job_id" name="job_id" value="">
                 <div class="validation-box"></div>
             </div>
             <div class="form-group">

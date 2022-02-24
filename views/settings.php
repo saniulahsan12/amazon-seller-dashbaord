@@ -3,6 +3,17 @@ defined('ABSPATH') or die('No script kiddies please!');
 
 add_shortcode('amazon-seller-dashboard', 'amazon_seller_dashboard_settings_details');
 
+function format_to_currency($amount)
+{
+	return number_format((float)$amount, 2, '.', '');
+}
+
+function seller_increment_calculation($amount, $percentage)
+{
+	$amount_calculated = $amount + ($amount * ($percentage / 100));
+	return format_to_currency($amount_calculated);
+}
+
 function amazon_seller_dashboard_settings_details()
 {
 
@@ -10,7 +21,6 @@ function amazon_seller_dashboard_settings_details()
 	global $wpdb;
 
 	$table_name = $wpdb->prefix . 'amazon_seller_products';
-	$post_table_name = $wpdb->prefix . 'posts';
 	$page = clean_input($_GET['page_no'] ?? 1);
 	$limit = clean_input($_GET['limit'] ?? 10);
 	// $limit = 1;
@@ -30,16 +40,19 @@ function amazon_seller_dashboard_settings_details()
 
 
 	if (!current_user_can('administrator')) {
-		$where_job_author = "WHERE ${post_table_name}.post_author=" . get_current_user_id();
 		$where_post_author = "WHERE ${table_name}.client_id=" . get_current_user_id();
 	} else {
-		$where_job_author = "WHERE ${post_table_name}.post_author>0";
 		$where_post_author = "WHERE ${table_name}.client_id=" . clean_input($client);
+	}
+
+	if (!empty($_GET['job_id'])) {
+		$job_id = clean_input($_GET['job_id']);
+		$search_params .= " AND ${table_name}.job_id=${job_id}";
 	}
 
 	if (!empty($_GET['keyword'])) {
 		$keyword = clean_input($_GET['keyword']);
-		$search_params .= "AND ${table_name}.keyword LIKE '%${keyword}%'";
+		$search_params .= " AND ${table_name}.keyword LIKE '%${keyword}%'";
 	}
 
 	if (current_user_can('administrator')) {
@@ -69,7 +82,6 @@ function amazon_seller_dashboard_settings_details()
 
 	if (sizeof($_GET) > 0) {
 		$sql = "SELECT count(*) AS total FROM ${table_name} 
-					INNER JOIN ${terms} ON ${table_name}.keyword_id=${terms}.term_id 
 					${where_post_author} 
 					${search_params} 
 				";
@@ -79,8 +91,7 @@ function amazon_seller_dashboard_settings_details()
 			$total = $total[0]['total'];
 		}
 
-		$sql = "SELECT ${terms}.name AS keyword, ${table_name}.name AS name, order_number, amount, email, phone, keyword_id FROM ${table_name} 
-					INNER JOIN ${terms} ON ${table_name}.keyword_id=${terms}.term_id 
+		$sql = "SELECT ${table_name}.name AS name, order_number, amount, email, phone, keyword, asin, percentage FROM ${table_name} 
 					${where_post_author} 
 					${search_params} 
 					LIMIT ${limit} OFFSET ${offset}";
@@ -88,13 +99,56 @@ function amazon_seller_dashboard_settings_details()
 		$products = $wpdb->get_results($sql, ARRAY_A);
 	}
 
-	$sql = "SELECT ${post_table_name}.post_title AS name, ${post_table_name}.ID AS job_id FROM ${post_table_name} 
-				${where_job_author} AND ${post_table_name}.post_status='publish' AND ${post_table_name}.post_type='amazon_seller_prod'";
+	$data_set = [];
 
-	$jobs = $wpdb->get_results($sql, ARRAY_A);
+	$args = array(
+		'posts_per_page'   => -1,
+		'post_status'      => 'publish',
+		'post_type'      => 'amazon_seller_prod',
+		'order' => 'ASC'
+	);
 
+	if (!empty($_GET['job_id'])) {
+		$args['include'] = array($_GET['job_id']);
+	}
+
+	if (!current_user_can('administrator')) {
+		$args['author'] = get_current_user_id();
+	} else if ($client > 0) {
+		$args['author'] = clean_input($client);
+	}
+
+	$jobs = get_posts($args);
+
+	if (!empty($jobs)) {
+		foreach ($jobs as $job) {
+			$asin_number = get_post_meta($job->ID, 'asin_number', true);
+			$asin_category = get_post_meta($job->ID, 'asin_category', true);
+			$asin_percentage = get_post_meta($job->ID, 'asin_percentage', true);
+
+			if (!empty($asin_number)) {
+				$asin_number = json_decode($asin_number);
+			}
+			if (!empty($asin_category)) {
+				$asin_category = json_decode($asin_category);
+			}
+			if (!empty($asin_percentage)) {
+				$asin_percentage = json_decode($asin_percentage);
+			}
+
+			foreach ($asin_number as $key => $v) {
+				$data_set[] = [
+					'client_id' => $job->post_author,
+					'asin' => $v,
+					'keywords' => explode(',', $asin_category[$key]),
+					'percentage' => $asin_percentage[$key]
+				];
+			}
+		}
+	}
 
 	$current_user = wp_get_current_user();
+	
 ?>
 
 	<?php if (is_user_logged_in()) : ?>
@@ -137,8 +191,8 @@ function amazon_seller_dashboard_settings_details()
 									<?php
 									if (!empty($jobs)) {
 										foreach ($jobs as $job) {
-											$selected = clean_input($_GET['job_id']) == $job['job_id'] ? 'selected' : '';
-											echo '<option ' . $selected . ' value="' . $job['job_id'] . '">' . $job['name'] . '</option>';
+											$selected = clean_input($_GET['job_id']) == $job->ID ? 'selected' : '';
+											echo '<option ' . $selected . ' value="' . $job->ID . '">' . $job->post_title . '</option>';
 										}
 									}
 									?>
@@ -146,7 +200,15 @@ function amazon_seller_dashboard_settings_details()
 							</div>
 
 							<div class="form-group col-md-4">
-								<input type="text" class="form-control" placeholder="Keyword" name="keyword" value="<?php echo clean_input($_GET['keyword']) ?? ''; ?>">
+								<select class="form-control keywords-dropdown" name="keyword">
+									<option value="">Select</option>
+									<?php foreach ($data_set as $data) : ?>
+										<?php foreach ($data['keywords'] as $keyword) : ?>
+											<?php $selected = clean_input($_GET['keyword']) == $keyword ? 'selected' : ''; ?>
+											<option <?php echo $selected; ?> value="<?php echo $keyword; ?>"> <?php echo $keyword; ?></option>
+										<?php endforeach; ?>
+									<?php endforeach; ?>
+								</select>
 							</div>
 						</div>
 						<hr>
@@ -209,6 +271,8 @@ function amazon_seller_dashboard_settings_details()
 
 										<?php if (current_user_can('administrator')) : ?>
 											<th scope="col">ASIN</th>
+											<th scope="col" class="text-right">Percentage</th>
+											<th scope="col" class="text-right">Total after Calculation</th>
 										<?php endif; ?>
 									</tr>
 								</thead>
@@ -225,11 +289,13 @@ function amazon_seller_dashboard_settings_details()
 											<?php endif; ?>
 
 											<td><?php echo $product['order_number']; ?></td>
-											<td class="text-right"><?php echo number_format((float)$product['amount'], 2, '.', ''); ?></td>
+											<td class="text-right"><?php echo format_to_currency($product['amount']); ?></td>
 											<td class="text-center"><?php echo $product['keyword']; ?></td>
 
 											<?php if (current_user_can('administrator')) : ?>
-												<td><?php echo amazon_seller_get_asin($product['keyword_id']); ?></td>
+												<td class="text-center"><?php echo $product['asin']; ?></td>
+												<td class="text-right"><?php echo $product['percentage']; ?></td>
+												<td class="text-right"><?php echo seller_increment_calculation($product['amount'], $product['percentage']); ?></td>
 											<?php endif; ?>
 									</tbody>
 								<?php endforeach; ?>
