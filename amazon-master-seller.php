@@ -30,19 +30,21 @@ function amazon_seller_trigger_activating_plugin() {
 	if ( $wpdb->get_var( "show tables like '$table_name'" ) != $table_name ) {
 		$sql = 'CREATE TABLE ' . $table_name . ' (
 				`id` bigint NOT NULL AUTO_INCREMENT PRIMARY KEY,
-				`keyword_id` bigint NOT NULL,
+				`keyword` varchar(255) NOT NULL,
 				`client_id` bigint NOT NULL,
 				`name` varchar(255) NOT NULL,
 				`order_number` varchar(255) NOT NULL,
 				`amount` double NOT NULL,
+				`percentage` double NOT NULL,
 				`email` varchar(255) NOT NULL,
+				`asin` varchar(255) NOT NULL,
 				`phone` varchar(255) NOT NULL,
 				`created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 				) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;
 				';
 		dbDelta( $sql );
 
-		$sql = 'CREATE  INDEX idx_keyword_id ON '. $wpdb->prefix . 'amazon_seller_products(keyword_id);';
+		$sql = 'CREATE  INDEX idx_keyword ON '. $wpdb->prefix . 'amazon_seller_products(keyword);';
 		$wpdb->query($sql);
 
 		$sql = 'CREATE  INDEX idx_order_number ON ' . $wpdb->prefix . 'amazon_seller_products(order_number);';
@@ -77,7 +79,7 @@ function amazon_seller_trigger_deactivating_plugin() {
 register_activation_hook( __FILE__, 'amazon_seller_trigger_activating_plugin' );
 
 // run the uninstall scripts upon the plugin deactivation
-// register_deactivation_hook( __FILE__, 'amazon_seller_trigger_deactivating_plugin' );
+register_deactivation_hook( __FILE__, 'amazon_seller_trigger_deactivating_plugin' );
 
 require_once AMAZON_SELLER_DASHBOARD . '/class/bootfile.class.php';
 

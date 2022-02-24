@@ -11,10 +11,6 @@ function amazon_seller_dashboard_settings_details()
 
 	$table_name = $wpdb->prefix . 'amazon_seller_products';
 	$post_table_name = $wpdb->prefix . 'posts';
-	$term_relationships = $wpdb->prefix . 'term_relationships';
-	$term_taxonomy = $wpdb->prefix . 'term_taxonomy';
-	$terms = $wpdb->prefix . 'terms';
-	$termmeta = $wpdb->prefix . 'termmeta';
 	$page = clean_input($_GET['page_no'] ?? 1);
 	$limit = clean_input($_GET['limit'] ?? 10);
 	// $limit = 1;
@@ -41,9 +37,9 @@ function amazon_seller_dashboard_settings_details()
 		$where_post_author = "WHERE ${table_name}.client_id=" . clean_input($client);
 	}
 
-	if (!empty($_GET['order_number'])) {
-		$order_number = clean_input($_GET['order_number']);
-		$search_params .= "AND ${table_name}.order_number='${order_number}'";
+	if (!empty($_GET['keyword'])) {
+		$keyword = clean_input($_GET['keyword']);
+		$search_params .= "AND ${table_name}.keyword LIKE '%${keyword}%'";
 	}
 
 	if (current_user_can('administrator')) {
@@ -68,33 +64,6 @@ function amazon_seller_dashboard_settings_details()
 			$fromDate = date('Y-m-d', strtotime(clean_input($_GET['fromDate'])));
 			$toDate = date('Y-m-d', strtotime(clean_input($_GET['toDate'])));
 			$search_params .= "AND ${table_name}.created >= '${fromDate}' AND ${table_name}.created <= '${toDate}'";
-		}
-	}
-
-
-	if (!empty($_GET['job_id']) || !empty($_GET['keyword_id'])) {
-
-		if (!empty($_GET['job_id'])) {
-
-			$job_id = clean_input($_GET['job_id']);
-			$sql = "SELECT term_taxonomy_id AS term_id FROM ${term_relationships} where object_id=${job_id}";
-			$keywords = $wpdb->get_results($sql, ARRAY_A);
-
-			if (!empty($keywords)) {
-				$keywords = $keywords[0];
-				$keywords_map = array_map(function ($keyword) {
-					return $keyword;
-				}, $keywords);
-				$keywords_map = implode(',', $keywords_map);
-			} else {
-				$keywords_map = NULL;
-			}
-
-			$search_params .= "AND ${table_name}.keyword_id IN (${keywords_map}) ";
-		} else if (!empty($_GET['keyword_id'])) {
-
-			$keyword_id = clean_input($_GET['keyword_id']);
-			$search_params .= "AND ${table_name}.keyword_id=${keyword_id}";
 		}
 	}
 
@@ -124,52 +93,8 @@ function amazon_seller_dashboard_settings_details()
 
 	$jobs = $wpdb->get_results($sql, ARRAY_A);
 
-	if (current_user_can('administrator')) {
-		$keyword_user = "WHERE true ";
-	} else {
-		$keyword_user = "WHERE ${termmeta}.meta_key='user_id' 
-				AND ${termmeta}.meta_value=" . get_current_user_id();
-	}
-
-	if (!empty($_GET['job_id'])) {
-		$keyword_filter = "AND ${term_relationships}.object_id=" . intval($_GET['job_id']);
-	} else {
-		$keyword_filter = '';
-	}
-
-	$sql = "SELECT ${terms}.term_id, ${terms}.name FROM ${term_taxonomy} 
-				INNER JOIN ${terms} ON ${term_taxonomy}.term_id=${terms}.term_id 
-				INNER JOIN ${termmeta} ON ${termmeta}.term_id=${terms}.term_id 
-				INNER JOIN ${term_relationships} ON ${term_relationships}.term_taxonomy_id=${term_taxonomy}.term_taxonomy_id 
-				${keyword_user}
-				AND ${term_taxonomy}.taxonomy='keywords' 
-				${keyword_filter}
-				";
-
-	$keywords = $wpdb->get_results($sql, ARRAY_A);
-
 
 	$current_user = wp_get_current_user();
-
-	function amazon_seller_get_asin($keyword_id)
-	{
-		$products = get_posts(array(
-			'post_type' => 'amazon_seller_prod',
-			'numberposts' => 1,
-			'tax_query' => array(
-				array(
-					'taxonomy' => 'keywords',
-					'field' => 'term_id',
-					'terms' => $keyword_id,
-					'include_children' => false
-				)
-			)
-		));
-
-		if (!empty($products)) {
-			return implode(', ', json_decode(get_post_meta($products[0]->ID, 'asin_number', true)));
-		}
-	}
 ?>
 
 	<?php if (is_user_logged_in()) : ?>
@@ -221,17 +146,7 @@ function amazon_seller_dashboard_settings_details()
 							</div>
 
 							<div class="form-group col-md-4">
-								<select class="form-control keywords-dropdown" name="keyword_id">
-									<option value="">Select</option>
-									<?php
-									if (!empty($keywords)) {
-										foreach ($keywords as $keyword) {
-											$selected = clean_input($_GET['keyword_id']) == $keyword['term_id'] ? 'selected' : '';
-											echo '<option ' . $selected . ' value="' . $keyword['term_id'] . '">' . $keyword['name'] . '</option>';
-										}
-									}
-									?>
-								</select>
+								<input type="text" class="form-control" placeholder="Keyword" name="keyword" value="<?php echo clean_input($_GET['keyword']) ?? ''; ?>">
 							</div>
 						</div>
 						<hr>
