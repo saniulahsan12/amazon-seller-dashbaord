@@ -2,7 +2,7 @@
 
 function wpdocs_remove_menus()
 {
-	if (get_current_user_id() == 1) {
+	if (current_user_can('administrator')) {
 		return;
 	}
 	// remove_menu_page('index.php');                  //Dashboard
@@ -22,7 +22,7 @@ add_action('admin_menu', 'wpdocs_remove_menus');
 
 function shapeSpace_remove_toolbar_nodes($wp_admin_bar)
 {
-	if (get_current_user_id() == 1) {
+	if (current_user_can('administrator')) {
 		return;
 	}
 
@@ -42,7 +42,7 @@ add_action('current_screen', 'wpdocs_this_screen');
  */
 function wpdocs_this_screen()
 {
-	if (get_current_user_id() == 1) {
+	if (current_user_can('administrator')) {
 		return;
 	}
 
