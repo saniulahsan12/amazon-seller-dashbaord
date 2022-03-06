@@ -455,3 +455,11 @@ function general_settings_custom_fields_html()
 	$value = get_option('tos_uri_form', '');
 	echo '<input type="text" class"widefat" id="tos_uri_form" name="tos_uri_form" value="' . $value . '" />';
 }
+
+function calculate_local_date_time($date)
+{
+	$dt = new DateTime();
+	$dt->setTimezone(new DateTimeZone(wp_timezone_string()));
+	$dt->setTimestamp(strtotime($date));
+	return $dt->format('d.m.Y, H:i');
+}

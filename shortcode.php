@@ -31,6 +31,7 @@ function save_seller_survey_data_to_db()
                     'amount' => clean_input($_POST['amount']),
                     'email' => clean_input($_POST['email']),
                     'phone' => clean_input($_POST['phone']),
+                    'created' => gmdate("Y-m-d H:i:s")
                 ];
                 $format = [
                     '%d',
@@ -41,6 +42,7 @@ function save_seller_survey_data_to_db()
                     '%s',
                     '%s',
                     '%f',
+                    '%s',
                     '%s',
                     '%s',
                 ];

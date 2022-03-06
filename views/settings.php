@@ -10,7 +10,7 @@ function format_to_currency($amount)
 
 function seller_increment_calculation($amount, $percentage)
 {
-	$amount_calculated = $amount + ($amount * ($percentage / 100));
+	$amount_calculated = $amount - ($amount * ($percentage / 100));
 	return format_to_currency($amount_calculated);
 }
 
@@ -53,7 +53,11 @@ function amazon_seller_dashboard_settings_details()
 	if (!current_user_can('administrator')) {
 		$where_post_author = "WHERE ${table_name}.client_id=" . get_current_user_id();
 	} else {
-		$where_post_author = "WHERE ${table_name}.client_id=" . clean_input($client);
+		if (!empty($_GET['client']) && $_GET['client'] == 'all') {
+			$where_post_author = '';
+		} else {
+			$where_post_author = "WHERE ${table_name}.client_id=" . clean_input($client);
+		}
 	}
 
 	if (!empty($_GET['job_id'])) {
@@ -107,7 +111,7 @@ function amazon_seller_dashboard_settings_details()
 			$total = $total[0]['total'];
 		}
 
-		$sql = "SELECT ${table_name}.name AS name, order_number, amount, email, phone, keyword, asin, percentage FROM ${table_name} 
+		$sql = "SELECT ${table_name}.name AS name, order_number, amount, email, phone, keyword, asin, percentage, created FROM ${table_name} 
 					${where_post_author} 
 					${search_params} 
 					LIMIT ${limit} OFFSET ${offset}";
@@ -191,6 +195,7 @@ function amazon_seller_dashboard_settings_details()
 								<div class="form-group col-md-4">
 									<select class="form-control clients-dropdown" name="client">
 										<option value="">Choose Client</option>
+										<option <?php echo 'all' == $_GET['client'] ? 'selected' : ''; ?> value="all">All</option>
 										<?php
 										foreach ($users as $user) {
 											$selected = $client == $user->ID ? 'selected' : '';
@@ -274,6 +279,7 @@ function amazon_seller_dashboard_settings_details()
 								<thead>
 									<tr class="text-center">
 										<th scope="col" class="text-right">#</th>
+										<th scope="col" class="text-center">Date</th>
 
 										<?php if (current_user_can('administrator')) : ?>
 											<th scope="col">Name</th>
@@ -282,11 +288,15 @@ function amazon_seller_dashboard_settings_details()
 										<?php endif; ?>
 
 										<th scope="col" class="text-left">Order No.</th>
-										<th scope="col" class="text-right">Currency</th>
 										<th scope="col" class="text-center">Keywords</th>
 
 										<?php if (current_user_can('administrator')) : ?>
 											<th scope="col">ASIN</th>
+										<?php endif; ?>
+
+										<th scope="col" class="text-right">Amount</th>
+
+										<?php if (current_user_can('administrator')) : ?>
 											<th scope="col" class="text-right">Percentage</th>
 											<th scope="col" class="text-right">Total after Calculation</th>
 										<?php endif; ?>
@@ -297,6 +307,7 @@ function amazon_seller_dashboard_settings_details()
 									<?php foreach ($products as $key => $product) : ?>
 										<tr class="text-center">
 											<th scope="row" class="text-right"><?php echo $key + 1; ?></th>
+											<th scope="row" class="text-right"><?php echo calculate_local_date_time($product['created']); ?></th>
 
 											<?php if (current_user_can('administrator')) : ?>
 												<td><?php echo $product['name']; ?></td>
@@ -305,11 +316,15 @@ function amazon_seller_dashboard_settings_details()
 											<?php endif; ?>
 
 											<td><?php echo $product['order_number']; ?></td>
-											<td class="text-right"><?php echo format_to_currency($product['amount']); ?></td>
 											<td class="text-center"><?php echo $product['keyword']; ?></td>
 
 											<?php if (current_user_can('administrator')) : ?>
 												<td class="text-center"><?php echo $product['asin']; ?></td>
+											<?php endif; ?>
+
+											<td class="text-right"><?php echo format_to_currency($product['amount']); ?></td>
+
+											<?php if (current_user_can('administrator')) : ?>
 												<td class="text-right"><?php echo $product['percentage']; ?></td>
 												<td class="text-right"><?php echo seller_increment_calculation($product['amount'], $product['percentage']); ?></td>
 											<?php endif; ?>
