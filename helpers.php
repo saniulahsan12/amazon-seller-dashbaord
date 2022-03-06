@@ -249,12 +249,28 @@ function asin_number_meta_box_callback($post)
 		echo '<p>
 				<label for="p_scnts">
 					<input placeholder="ASIN" style="width: 15%;" type="text" id="asin_number" name="asin_number[]" value="' . $v . '" />
-					<input placeholder="Category" style="width: 50%;" type="text" id="asin_category" name="asin_category[]" value="' . $asin_category[$key] . '" />
+					<input placeholder="Tag" style="width: 50%;" type="text" id="asin_category" name="asin_category[]" value="' . $asin_category[$key] . '" />
 					<select style="width: 15%;" id="asin_percentage" name="asin_percentage[]">
 						<option ' . ($asin_percentage[$key] == 5 ? 'selected' : '') . ' value="5">5%</option>
 						<option ' . ($asin_percentage[$key] == 10 ? 'selected' : '') . ' value="10">10%</option>
 						<option ' . ($asin_percentage[$key] == 15 ? 'selected' : '') . ' value="15">15%</option>
 						<option ' . ($asin_percentage[$key] == 20 ? 'selected' : '') . ' value="20">20%</option>
+						<option ' . ($asin_percentage[$key] == 25 ? 'selected' : '') . ' value="25">25%</option>
+						<option ' . ($asin_percentage[$key] == 30 ? 'selected' : '') . ' value="30">30%</option>
+						<option ' . ($asin_percentage[$key] == 35 ? 'selected' : '') . ' value="35">35%</option>
+						<option ' . ($asin_percentage[$key] == 40 ? 'selected' : '') . ' value="40">40%</option>
+						<option ' . ($asin_percentage[$key] == 45 ? 'selected' : '') . ' value="45">45%</option>
+						<option ' . ($asin_percentage[$key] == 50 ? 'selected' : '') . ' value="50">50%</option>
+						<option ' . ($asin_percentage[$key] == 55 ? 'selected' : '') . ' value="55">55%</option>
+						<option ' . ($asin_percentage[$key] == 60 ? 'selected' : '') . ' value="60">60%</option>
+						<option ' . ($asin_percentage[$key] == 65 ? 'selected' : '') . ' value="65">65%</option>
+						<option ' . ($asin_percentage[$key] == 70 ? 'selected' : '') . ' value="70">70%</option>
+						<option ' . ($asin_percentage[$key] == 75 ? 'selected' : '') . ' value="75">75%</option>
+						<option ' . ($asin_percentage[$key] == 80 ? 'selected' : '') . ' value="80">80%</option>
+						<option ' . ($asin_percentage[$key] == 85 ? 'selected' : '') . ' value="85">85%</option>
+						<option ' . ($asin_percentage[$key] == 90 ? 'selected' : '') . ' value="90">90%</option>
+						<option ' . ($asin_percentage[$key] == 95 ? 'selected' : '') . ' value="95">95%</option>
+						<option ' . ($asin_percentage[$key] == 100 ? 'selected' : '') . ' value="100">100%</option>
 					</select>
 				</label>
 				<button type="button" class="remScnt button button-primary button-large">
