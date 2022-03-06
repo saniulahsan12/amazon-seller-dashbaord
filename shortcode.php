@@ -19,22 +19,19 @@ function save_seller_survey_data_to_db()
 
                 global $wpdb;
                 $table = $wpdb->prefix . 'amazon_seller_products';
-                $term_meta = $wpdb->prefix . 'termmeta';
-
-                $term_id = clean_input($_POST['keyword']);
-                $sql = "SELECT meta_value FROM ${term_meta}  
-				WHERE meta_key='user_id' AND term_id=${term_id}";
-
-                $client = $wpdb->get_results($sql, ARRAY_A);
 
                 $data = [
-                    'client_id' => !empty($client) ? $client[0]['meta_value'] : -1,
-                    'keyword_id' => clean_input($_POST['keyword']),
+                    'client_id' => clean_input($_POST['client_id']),
+                    'job_id' => clean_input($_POST['job_id']),
+                    'keyword' => clean_input($_POST['keyword']),
+                    'asin' => clean_input($_POST['asin']),
+                    'percentage' => clean_input($_POST['percentage']),
                     'name' => clean_input($_POST['name']),
                     'order_number' => clean_input($_POST['order_number']),
                     'amount' => clean_input($_POST['amount']),
                     'email' => clean_input($_POST['email']),
                     'phone' => clean_input($_POST['phone']),
+                    'created' => gmdate("Y-m-d H:i:s")
                 ];
                 $format = [
                     '%d',
@@ -42,6 +39,10 @@ function save_seller_survey_data_to_db()
                     '%s',
                     '%s',
                     '%f',
+                    '%s',
+                    '%s',
+                    '%f',
+                    '%s',
                     '%s',
                     '%s',
                 ];
@@ -64,19 +65,55 @@ function amazon_survey_seller_form()
 {
     $status = !empty($_GET['status']) ? $_GET['status'] : '';
 
-    global $wpdb;
-    $term_taxonomy = $wpdb->prefix . 'term_taxonomy';
-    $terms = $wpdb->prefix . 'terms';
-    $posts_table = $wpdb->prefix . 'posts';
-    $terms_relationship = $wpdb->prefix . 'term_relationships';
-    $sql = "SELECT ${posts_table}.post_status, ${terms}.term_id, ${terms}.name FROM ${term_taxonomy} 
-				INNER JOIN ${terms} ON ${term_taxonomy}.term_id=${terms}.term_id 
-				INNER JOIN ${terms_relationship} ON ${terms_relationship}.term_taxonomy_id=${term_taxonomy}.term_taxonomy_id 
-				INNER JOIN ${posts_table} ON ${posts_table}.ID=${terms_relationship}.object_Id 
-				AND ${term_taxonomy}.taxonomy='keywords'";
+    $data_set = [];
 
-    $keywords = $wpdb->get_results($sql, ARRAY_A);
+    $args = array(
+        'posts_per_page'   => -1,
+        'post_status'      => 'publish',
+        'post_type'      => 'amazon_seller_prod',
+        'order' => 'ASC'
+    );
+
+    $jobs = get_posts($args);
+
+    if (!empty($jobs)) {
+        foreach ($jobs as $job) {
+            $asin_number = get_post_meta($job->ID, 'asin_number', true);
+            $asin_category = get_post_meta($job->ID, 'asin_category', true);
+            $asin_percentage = get_post_meta($job->ID, 'asin_percentage', true);
+
+            if (!empty($asin_number)) {
+                $asin_number = json_decode($asin_number);
+            }
+            if (!empty($asin_category)) {
+                $asin_category = json_decode($asin_category);
+            }
+            if (!empty($asin_percentage)) {
+                $asin_percentage = json_decode($asin_percentage);
+            }
+
+            foreach ($asin_number as $key => $v) {
+                $data_set[] = [
+                    'job_id' => $job->ID,
+                    'client_id' => $job->post_author,
+                    'asin' => $v,
+                    'keywords' => explode(',', $asin_category[$key]),
+                    'percentage' => $asin_percentage[$key]
+                ];
+            }
+        }
+    }
 ?>
+
+    <script>
+        function setMetaValueSellerProd(params) {
+            var selection = jQuery(params).find(":selected");
+            jQuery('#amazon_seller_prod_client_id').val(selection.data('client'));
+            jQuery('#amazon_seller_prod_asin').val(selection.data('asin'));
+            jQuery('#amazon_seller_prod_percentage').val(selection.data('percentage'));
+            jQuery('#amazon_seller_prod_job_id').val(selection.data('job'));
+        }
+    </script>
     <div class="amazon-seller-dashboard-admin">
 
         <?php if ($status == 'success') : ?>
@@ -96,13 +133,20 @@ function amazon_survey_seller_form()
         <form method="post" id="ProductSurveyForm">
             <div class="form-group">
                 <label for="keyword">Choose the keyword <span class="required">*</span></label>
-                <select class="form-control hybrid-select" id="keyword" name="keyword">
+                <select onchange="setMetaValueSellerProd(this)" class="form-control hybrid-select" id="keyword" name="keyword">
                     <option value="">Choose</option>
-                    <?php foreach ($keywords as $keyword) : if ($keyword['post_status'] != 'publish') : continue;
-                        endif; ?>
-                        <option value="<?php echo $keyword['term_id']; ?>"> <?php echo $keyword['name']; ?> </option>
+                    <?php foreach ($data_set as $data) : ?>
+                        <?php foreach ($data['keywords'] as $keyword) : ?>
+                            <option data-job="<?php echo $data['job_id']; ?>"  data-client="<?php echo $data['client_id']; ?>" data-asin="<?php echo $data['asin']; ?>" data-percentage="<?php echo $data['percentage']; ?>" value="<?php echo $keyword; ?>
+                                "> <?php echo $keyword; ?>
+                            </option>
+                        <?php endforeach; ?>
                     <?php endforeach; ?>
                 </select>
+                <input type="hidden" id="amazon_seller_prod_client_id" name="client_id" value="">
+                <input type="hidden" id="amazon_seller_prod_asin" name="asin" value="">
+                <input type="hidden" id="amazon_seller_prod_percentage" name="percentage" value="">
+                <input type="hidden" id="amazon_seller_prod_job_id" name="job_id" value="">
                 <div class="validation-box"></div>
             </div>
             <div class="form-group">

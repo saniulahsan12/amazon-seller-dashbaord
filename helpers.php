@@ -2,7 +2,7 @@
 
 function wpdocs_remove_menus()
 {
-	if (get_current_user_id() == 1) {
+	if (current_user_can('administrator')) {
 		return;
 	}
 	// remove_menu_page('index.php');                  //Dashboard
@@ -22,7 +22,7 @@ add_action('admin_menu', 'wpdocs_remove_menus');
 
 function shapeSpace_remove_toolbar_nodes($wp_admin_bar)
 {
-	if (get_current_user_id() == 1) {
+	if (current_user_can('administrator')) {
 		return;
 	}
 
@@ -42,7 +42,7 @@ add_action('current_screen', 'wpdocs_this_screen');
  */
 function wpdocs_this_screen()
 {
-	if (get_current_user_id() == 1) {
+	if (current_user_can('administrator')) {
 		return;
 	}
 
@@ -157,9 +157,6 @@ add_role(AMAZON_SELLER_CLIENT_ROLE, 'Amazon Seller Client', [
 
 add_action('init', function () {
 
-	if (!current_user_can('administrator')) {
-		return;
-	}
 	$args = [
 		'capability_type'     => array('amazon_seller_prod', 'amazon_seller_prods'),
 		'map_meta_cap'        => true,
@@ -188,61 +185,6 @@ add_action('init', function () {
 });
 
 
-add_action('init', 'product_keywords_hierarchical_taxonomy', 0);
-
-function product_keywords_hierarchical_taxonomy()
-{
-	if (!current_user_can('administrator')) {
-		return;
-	}
-	$labels = array(
-		'name' => _x('Product Keywords', 'taxonomy general name'),
-		'singular_name' => _x('Keyword', 'taxonomy singular name'),
-		'search_items' =>  __('Search Keywords'),
-		'all_items' => __('All Keywords'),
-		'parent_item' => __('Parent Keyword'),
-		'parent_item_colon' => __('Parent Keyword:'),
-		'edit_item' => __('Edit Keyword'),
-		'update_item' => __('Update Keyword'),
-		'add_new_item' => __('Add New Keyword'),
-		'new_item_name' => __('New Keyword Name'),
-		'menu_name' => __('Keywords'),
-	);
-
-	register_taxonomy(
-		'keywords',
-		array('amazon_seller_prod'),
-		array(
-			'hierarchical' => true,
-			'labels' => $labels,
-			'show_ui' => true,
-			'show_in_rest' => false,
-			'show_admin_column' => true,
-			'query_var' => true,
-			'rewrite' => array('slug' => 'keywords'),
-			'capabilities' => array(
-				'manage_terms' => 'manage_keywords',
-				'delete_terms' => 'delete_keywords',
-				'edit_terms' => 'edit_keywords',
-				'assign_terms' => 'assign_keywords',
-			)
-		)
-	);
-}
-
-/**
- * Hide tags from quick edit if user does not have admin priviledges
- */
-function hide_tags_from_quick_edit($show_in_quick_edit, $taxonomy_name, $post_type)
-{
-	if ('post_tag' === 'keywords' && !current_user_can('edit_others_posts')) {
-		return false;
-	} else {
-		return $show_in_quick_edit;
-	}
-}
-add_filter('quick_edit_show_taxonomy', 'hide_tags_from_quick_edit', 10, 3);
-
 add_action('admin_init', 'amazon_seller_add_role_caps', 999);
 function amazon_seller_add_role_caps()
 {
@@ -262,17 +204,6 @@ function amazon_seller_add_role_caps()
 		$role->add_cap('delete_others_amazon_seller_prods');
 		$role->add_cap('delete_private_amazon_seller_prods');
 		$role->add_cap('delete_published_amazon_seller_prods');
-
-		// add a new capability
-		$capabilities = array(
-			'manage_keywords',
-			'delete_keywords',
-			'edit_keywords',
-			'assign_keywords',
-		);
-		foreach ($capabilities as $cap) {
-			$role->add_cap($cap);
-		}
 	}
 }
 
@@ -293,18 +224,58 @@ function asin_number_meta_box_callback($post)
 	// Add a nonce field so we can check for it later.
 	wp_nonce_field('asin_number_nonce', 'asin_number_nonce');
 
-	$value = get_post_meta($post->ID, 'asin_number', true);
+	$asin_number = get_post_meta($post->ID, 'asin_number', true);
+	$asin_category = get_post_meta($post->ID, 'asin_category', true);
+	$asin_percentage = get_post_meta($post->ID, 'asin_percentage', true);
 
-	if (!empty($value)) {
-		$value = json_decode($value);
+	if (!empty($asin_number)) {
+		$asin_number = json_decode($asin_number);
+	}
+	if (!empty($asin_category)) {
+		$asin_category = json_decode($asin_category);
+	}
+	if (!empty($asin_percentage)) {
+		$asin_percentage = json_decode($asin_percentage);
 	}
 
-	echo '<h2><a href="#" id="addScnt">Add ASIN</a></h2>';
+	echo '<h2>
+			<button type="button" class="button button-primary button-large" id="addScnt">
+				<span style="margin-top: 7px;" class="dashicons dashicons-plus">
+			</button>
+		</h2>';
 
 	echo '<div id="p_scents">';
-	foreach($value as $v) {
+	foreach($asin_number as $key => $v) {
 		echo '<p>
-				<label for="p_scnts"><input style="width: 80%;" type="text" id="asin_number" size="20" name="asin_number[]" value="' . $v . '" /></label> <a href="#" class="remScnt">Remove</a>
+				<label for="p_scnts">
+					<input placeholder="ASIN" style="width: 15%;" type="text" id="asin_number" name="asin_number[]" value="' . $v . '" />
+					<input placeholder="Tag" style="width: 50%;" type="text" id="asin_category" name="asin_category[]" value="' . $asin_category[$key] . '" />
+					<select style="width: 15%;" id="asin_percentage" name="asin_percentage[]">
+						<option ' . ($asin_percentage[$key] == 5 ? 'selected' : '') . ' value="5">5%</option>
+						<option ' . ($asin_percentage[$key] == 10 ? 'selected' : '') . ' value="10">10%</option>
+						<option ' . ($asin_percentage[$key] == 15 ? 'selected' : '') . ' value="15">15%</option>
+						<option ' . ($asin_percentage[$key] == 20 ? 'selected' : '') . ' value="20">20%</option>
+						<option ' . ($asin_percentage[$key] == 25 ? 'selected' : '') . ' value="25">25%</option>
+						<option ' . ($asin_percentage[$key] == 30 ? 'selected' : '') . ' value="30">30%</option>
+						<option ' . ($asin_percentage[$key] == 35 ? 'selected' : '') . ' value="35">35%</option>
+						<option ' . ($asin_percentage[$key] == 40 ? 'selected' : '') . ' value="40">40%</option>
+						<option ' . ($asin_percentage[$key] == 45 ? 'selected' : '') . ' value="45">45%</option>
+						<option ' . ($asin_percentage[$key] == 50 ? 'selected' : '') . ' value="50">50%</option>
+						<option ' . ($asin_percentage[$key] == 55 ? 'selected' : '') . ' value="55">55%</option>
+						<option ' . ($asin_percentage[$key] == 60 ? 'selected' : '') . ' value="60">60%</option>
+						<option ' . ($asin_percentage[$key] == 65 ? 'selected' : '') . ' value="65">65%</option>
+						<option ' . ($asin_percentage[$key] == 70 ? 'selected' : '') . ' value="70">70%</option>
+						<option ' . ($asin_percentage[$key] == 75 ? 'selected' : '') . ' value="75">75%</option>
+						<option ' . ($asin_percentage[$key] == 80 ? 'selected' : '') . ' value="80">80%</option>
+						<option ' . ($asin_percentage[$key] == 85 ? 'selected' : '') . ' value="85">85%</option>
+						<option ' . ($asin_percentage[$key] == 90 ? 'selected' : '') . ' value="90">90%</option>
+						<option ' . ($asin_percentage[$key] == 95 ? 'selected' : '') . ' value="95">95%</option>
+						<option ' . ($asin_percentage[$key] == 100 ? 'selected' : '') . ' value="100">100%</option>
+					</select>
+				</label>
+				<button type="button" class="remScnt button button-primary button-large">
+					<span style="margin-top: 6px;" class="dashicons dashicons-no-alt"></span>
+				</button>
 			</p>
 			';
 		}
@@ -336,16 +307,26 @@ function save_asin_number_meta_box_data($post_id)
 	}
 	/* OK, it's safe for us to save the data now. */
 
-	
+
 	// Sanitize user input.
-	$my_data = $_POST['asin_number'];
+	$asin_number = $_POST['asin_number'];
+	$asin_category = $_POST['asin_category'];
+	$asin_percentage = $_POST['asin_percentage'];
 	
 	// Make sure that it is set.
 	if (!isset($_POST['asin_number'])) {
-		$my_data = null;
+		$asin_number = null;
+	}
+	if (!isset($_POST['asin_category'])) {
+		$asin_category = null;
+	}
+	if (!isset($_POST['asin_percentage'])) {
+		$asin_percentage = null;
 	}
 	// Update the meta field in the database.
-	update_post_meta($post_id, 'asin_number', json_encode($my_data));
+	update_post_meta($post_id, 'asin_number', json_encode($asin_number));
+	update_post_meta($post_id, 'asin_category', json_encode($asin_category));
+	update_post_meta($post_id, 'asin_percentage', json_encode($asin_percentage));
 }
 
 add_action('save_post', 'save_asin_number_meta_box_data');
@@ -368,62 +349,12 @@ function posts_for_current_author($query)
 }
 add_filter('pre_get_posts', 'posts_for_current_author');
 
-
-function my_create($term_id, $tt_id, $taxonomy)
-{
-	return add_term_meta($term_id, 'user_id', get_current_user_id());
-}
-add_action('create_term', 'my_create', 10, 3);
-
-
-add_filter('get_terms_args', 'user_self_created_terms_only', 10, 2);
-function user_self_created_terms_only($args, $taxonomies)
-{
-
-	if (!current_user_can('edit_others_posts')) {
-
-		global $wpdb;
-		global $typenow;
-
-		$results = $wpdb->get_results("SELECT term_id FROM {$wpdb->prefix}termmeta WHERE meta_key='user_id' and meta_value = '" . get_current_user_id() . "'", OBJECT);
-
-		$results_mapped = [];
-		if (!empty($results)) {
-			$results_mapped = array_map(function ($result) {
-				return $result->term_id;
-			}, $results);
-		}
-		if ($typenow == 'amazon_seller_prod') {
-			// check whether we're currently filtering selected taxonomy
-			if (implode('', $taxonomies) == 'keywords') {
-				$cats = $results_mapped; // as an array
-
-				if (empty($cats))
-					$args['include'] = array(99999999); // no available categories
-				else
-					$args['include'] = $cats;
-			}
-		}
-	}
-	return $args;
-}
-
-// Remove pointless post meta boxes
-function FRANK_TWEAKS_current_screen()
+// prohibit unauthorized user from accessing others posts edit.
+function amazon_seller_prod_TWEAKS_current_screen()
 {
 	if (function_exists('get_current_screen') && !current_user_can('edit_others_posts')) {
 
 		$current_screen = get_current_screen();
-
-		if ($current_screen->post_type === 'amazon_seller_prod' && $_GET['taxonomy'] === 'keywords' && !empty($_GET['tag_ID'])) {
-			global $wpdb;
-			$term_id = $_GET['tag_ID'];
-			$results = $wpdb->get_results("SELECT term_id FROM {$wpdb->prefix}termmeta WHERE meta_key='user_id' and term_id='" . $term_id . "' and meta_value = '" . get_current_user_id() . "'", OBJECT);
-
-			if (empty($results)) {
-				wp_redirect(admin_url('edit-tags.php?taxonomy=keywords&post_type=amazon_seller_prod'));
-			}
-		}
 
 		if ($current_screen->base === 'post' && !empty($_GET['post']) && $_GET['action'] === 'edit') {
 			$post_author_id = get_post_field('post_author', $_GET['post']);
@@ -434,16 +365,8 @@ function FRANK_TWEAKS_current_screen()
 		}
 	}
 }
-add_action('current_screen', 'FRANK_TWEAKS_current_screen');
+add_action('current_screen', 'amazon_seller_prod_TWEAKS_current_screen');
 
-function remove_quick_edit($actions)
-{
-	if (!current_user_can('edit_others_posts')) {
-		unset($actions['inline hide-if-no-js']);
-	}
-	return $actions;
-}
-add_filter('post_row_actions', 'remove_quick_edit', 10, 1);
 
 // add custom field to custom post type
 function choose_client_markup($post)
@@ -501,23 +424,6 @@ function save_assign_client_meta_box($post_id, $post, $update)
 
 		// update the post, which calls save_post again
 		wp_update_post($arg);
-
-		// assing the keywords to the selected client
-		global $wpdb;
-		$term_meta_table = $wpdb->prefix . 'termmeta';
-		$term_obj_list = get_the_terms($post->ID, 'keywords');
-		
-		foreach($term_obj_list as $term) {
-			$wpdb->query(
-				$wpdb->prepare(
-					"UPDATE $term_meta_table SET meta_value = '%s' WHERE term_id='%d' AND meta_key='user_id'",
-					array(
-						$meta_box_dropdown_value,
-						$term->term_id
-					)
-				)
-			);
-		}
 		
 		// re-hook this function
 		add_action('save_post', 'save_assign_client_meta_box');
@@ -548,4 +454,23 @@ function general_settings_custom_fields_html()
 {
 	$value = get_option('tos_uri_form', '');
 	echo '<input type="text" class"widefat" id="tos_uri_form" name="tos_uri_form" value="' . $value . '" />';
+}
+
+function calculate_local_date_time($date)
+{
+	$dt = new DateTime();
+	$dt->setTimezone(new DateTimeZone(wp_timezone_string()));
+	$dt->setTimestamp(strtotime($date));
+	return $dt->format('d.m.Y, H:i');
+}
+
+function local_to_utc_date_time($date)
+{
+	$src_tz =  new DateTimeZone(wp_timezone_string());
+	$dest_tz = new DateTimeZone('+00:00');
+
+	$dt = new DateTime($date, $src_tz);
+	$dt->setTimeZone($dest_tz);
+
+	return $dt->format('Y-m-d H:i:s');
 }
