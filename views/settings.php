@@ -54,7 +54,7 @@ function amazon_seller_dashboard_settings_details()
 		$where_post_author = "WHERE ${table_name}.client_id=" . get_current_user_id();
 	} else {
 		if (!empty($_GET['client']) && $_GET['client'] == 'all') {
-			$where_post_author = '';
+			$where_post_author = 'WHERE true';
 		} else {
 			$where_post_author = "WHERE ${table_name}.client_id=" . clean_input($client);
 		}
@@ -94,8 +94,11 @@ function amazon_seller_dashboard_settings_details()
 
 
 		if (!empty($_GET['fromDate']) && !empty($_GET['toDate'])) {
-			$fromDate = date('Y-m-d', strtotime(clean_input($_GET['fromDate'])));
-			$toDate = date('Y-m-d', strtotime(clean_input($_GET['toDate'])));
+			$fromDate = date('Y-m-d H:i:s', strtotime(clean_input($_GET['fromDate'])));
+			$toDate = date('Y-m-d H:i:s', strtotime(clean_input($_GET['toDate'])));
+
+			$fromDate = local_to_utc_date_time($fromDate);
+			$toDate = local_to_utc_date_time($toDate);
 			$search_params .= "AND ${table_name}.created >= '${fromDate}' AND ${table_name}.created <= '${toDate}'";
 		}
 	}
@@ -252,11 +255,11 @@ function amazon_seller_dashboard_settings_details()
 								</div>
 
 								<div class="form-group col-md-4">
-									<input type="date" class="form-control" placeholder="Name" name="fromDate" value="<?php echo clean_input($_GET['fromDate']) ?? ''; ?>">
+									<input type="datetime-local" class="form-control" placeholder="Name" name="fromDate" value="<?php echo clean_input($_GET['fromDate']) ?? ''; ?>">
 								</div>
 
 								<div class="form-group col-md-4">
-									<input type="date" class="form-control" placeholder="Name" name="toDate" value="<?php echo clean_input($_GET['toDate']) ?? ''; ?>">
+									<input type="datetime-local" class="form-control" placeholder="Name" name="toDate" value="<?php echo clean_input($_GET['toDate']) ?? ''; ?>">
 								</div>
 
 							<?php endif; ?>
@@ -334,7 +337,7 @@ function amazon_seller_dashboard_settings_details()
 								<?php if (current_user_can('administrator')) : ?>
 									<tfoot>
 										<tr class="text-right">
-											<td colspan="9">Total</td>
+											<td colspan="10">Total</td>
 											<td>
 												<label id="lblTotal">
 													<?php echo seller_grand_total_calculation($products); ?>

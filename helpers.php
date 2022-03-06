@@ -463,3 +463,14 @@ function calculate_local_date_time($date)
 	$dt->setTimestamp(strtotime($date));
 	return $dt->format('d.m.Y, H:i');
 }
+
+function local_to_utc_date_time($date)
+{
+	$src_tz =  new DateTimeZone(wp_timezone_string());
+	$dest_tz = new DateTimeZone('+00:00');
+
+	$dt = new DateTime($date, $src_tz);
+	$dt->setTimeZone($dest_tz);
+
+	return $dt->format('Y-m-d H:i:s');
+}
